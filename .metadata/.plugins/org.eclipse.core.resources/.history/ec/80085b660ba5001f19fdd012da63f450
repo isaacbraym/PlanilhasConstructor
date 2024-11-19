@@ -1,0 +1,115 @@
+package com.abnote.planilhas.estilos.estilos;
+
+import java.util.Map;
+
+import org.apache.poi.ss.usermodel.*;
+
+import com.abnote.planilhas.estilos.EstiloCelula;
+
+public class Estilos {
+    private final EstiloCelula estiloCelula;
+    private Boolean bold = null;
+    private String fontName = null;
+    private Integer fontSize = null;
+    // Você pode adicionar mais propriedades de estilo conforme necessário
+
+    public Estilos(EstiloCelula estiloCelula) {
+        this.estiloCelula = estiloCelula;
+    }
+
+    public Estilos aplicarBold() {
+        this.bold = true;
+        aplicarEstilos();
+        return this;
+    }
+
+    public Estilos fonte(String fontName) {
+        this.fontName = fontName;
+        aplicarEstilos();
+        return this;
+    }
+
+    public Estilos fonteTamanho(int size) {
+        this.fontSize = size;
+        aplicarEstilos();
+        return this;
+    }
+
+    private void aplicarEstilos() {
+        Workbook workbook = estiloCelula.getWorkbook();
+        Sheet sheet = estiloCelula.getSheet();
+        Map<String, CellStyle> styleCache = estiloCelula.getStyleCache();
+        int rowIndex = estiloCelula.getRowIndex();
+        int columnIndex = estiloCelula.getColumnIndex();
+        int startRowIndex = estiloCelula.getStartRowIndex();
+        int startColumnIndex = estiloCelula.getStartColumnIndex();
+        int endRowIndex = estiloCelula.getEndRowIndex();
+        int endColumnIndex = estiloCelula.getEndColumnIndex();
+        boolean isRange = estiloCelula.isRange();
+
+        if (isRange) {
+            for (int rowIdx = startRowIndex; rowIdx <= endRowIndex; rowIdx++) {
+                Row row = sheet.getRow(rowIdx);
+                if (row == null)
+                    continue;
+                for (int colIdx = startColumnIndex; colIdx <= endColumnIndex; colIdx++) {
+                    Cell cell = row.getCell(colIdx);
+                    if (cell == null)
+                        continue;
+                    aplicarEstilosNaCelula(cell, workbook);
+                }
+            }
+        } else if (rowIndex != -1) {
+            if (columnIndex == -1) {
+                // Aplicar estilos em toda a linha
+                Row row = sheet.getRow(rowIndex);
+                if (row != null) {
+                    for (Cell cell : row) {
+                        if (cell != null) {
+                            aplicarEstilosNaCelula(cell, workbook);
+                        }
+                    }
+                }
+            } else {
+                // Aplicar estilos em uma célula específica
+                Row row = sheet.getRow(rowIndex);
+                if (row != null) {
+                    Cell cell = row.getCell(columnIndex);
+                    if (cell != null) {
+                        aplicarEstilosNaCelula(cell, workbook);
+                    }
+                }
+            }
+        }
+    }
+
+    private void aplicarEstilosNaCelula(Cell cell, Workbook workbook) {
+        // Obter o estilo original da célula
+        CellStyle originalStyle = cell.getCellStyle();
+
+        // Criar um novo estilo baseado no estilo original
+        CellStyle newStyle = workbook.createCellStyle();
+        newStyle.cloneStyleFrom(originalStyle);
+
+        // Obter a fonte original associada ao estilo
+        Font originalFont = workbook.getFontAt(originalStyle.getFontIndex());
+
+        // Criar uma nova fonte clonando as propriedades da fonte original
+        Font newFont = workbook.createFont();
+        newFont.setFontName(fontName != null ? fontName : originalFont.getFontName());
+        newFont.setFontHeightInPoints(fontSize != null ? fontSize.shortValue() : originalFont.getFontHeightInPoints());
+        newFont.setBold(bold != null ? bold : originalFont.getBold());
+        newFont.setItalic(originalFont.getItalic());
+        newFont.setUnderline(originalFont.getUnderline());
+        newFont.setColor(originalFont.getColor());
+        newFont.setTypeOffset(originalFont.getTypeOffset());
+        newFont.setStrikeout(originalFont.getStrikeout());
+        newFont.setCharSet(originalFont.getCharSet());
+
+        // Associar a nova fonte ao novo estilo
+        newStyle.setFont(newFont);
+
+        // Aplicar o novo estilo à célula
+        cell.setCellStyle(newStyle);
+    }
+}

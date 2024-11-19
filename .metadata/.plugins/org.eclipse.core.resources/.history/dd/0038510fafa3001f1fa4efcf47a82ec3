@@ -1,0 +1,19 @@
+package com.abnote.planilhas.impl;
+import java.util.List;
+
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class PlanilhaXlsx extends PlanilhaBase {
+    @Override
+    protected void inicializarWorkbook() {
+        workbook = new XSSFWorkbook(); // Inicializa XSSFWorkbook para arquivos .xlsx
+    }
+
+	@Override
+	public void inserirDadosColuna(List<String> dados, int numeroColuna, int linhaInicial) {
+		// TODO Auto-generated method stub
+		
+	}
+
+    // Não há necessidade de sobrescrever métodos de estilo específicos aqui
+}

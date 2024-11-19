@@ -1,0 +1,8 @@
+public class PlanilhaXlsx extends PlanilhaBase {
+    @Override
+    protected void inicializarWorkbook() {
+        workbook = new XSSFWorkbook(); // Inicializa XSSFWorkbook para arquivos .xlsx
+    }
+
+    // Não há necessidade de sobrescrever métodos de estilo específicos aqui
+}

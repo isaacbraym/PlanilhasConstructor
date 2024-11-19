@@ -1,0 +1,50 @@
+package com.abnote.planilhas.estilos.estilos;
+
+import org.apache.poi.ss.usermodel.*;
+
+import com.abnote.planilhas.estilos.EstiloCelula;
+
+public class CenterStyle {
+    private final Workbook workbook;
+    private final Sheet sheet;
+    private final EstiloCelula estiloCelula;
+
+    public CenterStyle(Workbook workbook, Sheet sheet, EstiloCelula estiloCelula) {
+        this.workbook = workbook;
+        this.sheet = sheet;
+        this.estiloCelula = estiloCelula;
+    }
+
+    public void centralizarTudo() {
+        if (estiloCelula.isRange) {
+            for (int rowIdx = estiloCelula.startRowIndex; rowIdx <= estiloCelula.endRowIndex; rowIdx++) {
+                Row row = sheet.getRow(rowIdx);
+                if (row == null)
+                    continue;
+                for (int colIdx = estiloCelula.startColumnIndex; colIdx <= estiloCelula.endColumnIndex; colIdx++) {
+                    Cell cell = row.getCell(colIdx);
+                    if (cell == null)
+                        continue;
+                    CellStyle originalStyle = cell.getCellStyle();
+                    CellStyle newStyle = estiloCelula.createCombinedStyle(originalStyle, false, true);
+                    cell.setCellStyle(newStyle);
+                }
+            }
+        } else {
+            for (Row row : sheet) {
+                for (Cell cell : row) {
+                    if (cell != null) {
+                        CellStyle originalStyle = cell.getCellStyle();
+                        CellStyle newStyle = estiloCelula.createCombinedStyle(originalStyle, false, true);
+                        cell.setCellStyle(newStyle);
+                    }
+                }
+            }
+        }
+    }
+
+    public void applyCentered(CellStyle style) {
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+    }
+}

@@ -1,0 +1,513 @@
+package com.abnote.planilhas.utils;
+
+import org.apache.poi.ss.usermodel.*;
+import java.util.*;
+
+public class ManipuladorPlanilha {
+	private Sheet sheet;
+
+	// Mapa para armazenar dados e estilos temporariamente
+	private Map<Integer, CellData> colunaTemporaria = new HashMap<>();
+
+	// Lista para armazenar os logs de ações
+	private List<ActionLog> actionLogs = new ArrayList<>();
+
+	// Deslocamento das colunas (dados começam na coluna "B")
+	private static final int COLUMN_OFFSET = 1;
+private String separaBloco = "____________________________________\n";
+	public ManipuladorPlanilha(Sheet sheet) {
+		this.sheet = sheet;
+	}
+
+	public ManipuladorPlanilha moverColuna(String moverAColuna, String paraAPosicao) {
+		int colunaOrigem = PosicaoConverter.converterColuna(moverAColuna) - COLUMN_OFFSET;
+		int colunaDestino = PosicaoConverter.converterColuna(paraAPosicao) - COLUMN_OFFSET;
+
+		// Verifica se as colunas são iguais
+		if (colunaOrigem == colunaDestino) {
+			return this;
+		}
+
+		// Capturar o estado dos cabeçalhos antes da alteração
+		Map<Integer, String> headerMap = getHeaderMap();
+
+		String headerOrigem = headerMap.get(colunaOrigem);
+		ColumnMovement mainMovement = new ColumnMovement(headerOrigem, moverAColuna, paraAPosicao);
+		ActionLog actionLog = new ActionLog("Deslocamento de colunas", mainMovement);
+
+		// Copia dados e estilos da coluna de origem
+		copiarColuna(colunaOrigem);
+
+		if (colunaOrigem < colunaDestino) {
+			// Move colunas intermediárias para a esquerda
+			shiftColumnsLeft(colunaOrigem + 1, colunaDestino);
+
+			// Registrar colunas deslocadas
+			for (int col = colunaOrigem + 1; col <= colunaDestino; col++) {
+				int targetCol = col - 1;
+				String headerName = headerMap.get(col);
+				if (headerName != null && !headerName.trim().isEmpty()) {
+					String previousIndex = PosicaoConverter.converterIndice(col + COLUMN_OFFSET);
+					String newIndex = PosicaoConverter.converterIndice(targetCol + COLUMN_OFFSET);
+					actionLog.shiftedColumns.add(new ColumnMovement(headerName, previousIndex, newIndex));
+				}
+			}
+		} else {
+			// Move colunas intermediárias para a direita
+			shiftColumnsRight(colunaDestino, colunaOrigem - 1);
+
+			// Registrar colunas deslocadas
+			for (int col = colunaOrigem - 1; col >= colunaDestino; col--) {
+				int targetCol = col + 1;
+				String headerName = headerMap.get(col);
+				if (headerName != null && !headerName.trim().isEmpty()) {
+					String previousIndex = PosicaoConverter.converterIndice(col + COLUMN_OFFSET);
+					String newIndex = PosicaoConverter.converterIndice(targetCol + COLUMN_OFFSET);
+					actionLog.shiftedColumns.add(new ColumnMovement(headerName, previousIndex, newIndex));
+				}
+			}
+		}
+
+		// Cola a coluna temporária na nova posição
+		colarColunaTemporaria(colunaDestino);
+
+		// Limpa a coluna temporária
+		colunaTemporaria.clear();
+
+		// Adiciona o log de ação
+		actionLogs.add(actionLog);
+
+		return this;
+	}
+
+	// Método para remover uma coluna
+	public ManipuladorPlanilha removerColuna(String coluna) {
+		int colIndex = PosicaoConverter.converterColuna(coluna) - COLUMN_OFFSET;
+		int lastColumn = getLastColumnNum();
+
+		// Capturar o estado dos cabeçalhos antes da alteração
+		Map<Integer, String> headerMap = getHeaderMap();
+
+		String headerName = headerMap.get(colIndex);
+		ColumnMovement mainMovement = new ColumnMovement(headerName, coluna, null);
+		ActionLog actionLog = new ActionLog("Remoção de coluna", mainMovement);
+
+		// Remove as células na coluna especificada
+		int lastRowNum = sheet.getLastRowNum();
+		for (int rowNum = 0; rowNum <= lastRowNum; rowNum++) {
+			Row row = sheet.getRow(rowNum);
+			if (row != null) {
+				Cell cellToRemove = row.getCell(colIndex + COLUMN_OFFSET);
+				if (cellToRemove != null) {
+					row.removeCell(cellToRemove);
+				}
+			}
+		}
+
+		// Desloca as colunas à direita da coluna removida para a esquerda
+		if (colIndex < lastColumn) {
+			shiftColumnsLeft(colIndex + 1, lastColumn);
+
+			// Registrar colunas deslocadas
+			for (int col = colIndex + 1; col <= lastColumn; col++) {
+				int targetCol = col - 1;
+				String shiftedHeaderName = headerMap.get(col);
+				if (shiftedHeaderName != null && !shiftedHeaderName.trim().isEmpty()) {
+					String previousIndex = PosicaoConverter.converterIndice(col + COLUMN_OFFSET);
+					String newIndex = PosicaoConverter.converterIndice(targetCol + COLUMN_OFFSET);
+					actionLog.shiftedColumns.add(new ColumnMovement(shiftedHeaderName, previousIndex, newIndex));
+				}
+			}
+		}
+
+		// Adiciona o log de ação
+		actionLogs.add(actionLog);
+
+		return this;
+	}
+
+	// Método para inserir uma coluna vazia entre duas colunas especificadas
+	public ManipuladorPlanilha inserirColunaVaziaEntre(String colunaEsquerda, String colunaDireita) {
+		int colEsquerdaIndex = PosicaoConverter.converterColuna(colunaEsquerda) - COLUMN_OFFSET;
+		int colDireitaIndex = PosicaoConverter.converterColuna(colunaDireita) - COLUMN_OFFSET;
+
+		// Validar a ordem das colunas
+		if (colDireitaIndex - colEsquerdaIndex != 1) {
+			throw new IllegalArgumentException("As colunas especificadas não são adjacentes. Certifique-se de que "
+					+ colunaDireita + " está imediatamente à direita de " + colunaEsquerda + ".");
+		}
+
+		// Capturar o estado dos cabeçalhos antes da alteração
+		Map<Integer, String> headerMap = getHeaderMap();
+
+		// A posição de inserção será a colunaDireitaIndex
+		int posicaoInsercao = colDireitaIndex;
+
+		int lastColumn = getLastColumnNum();
+
+		ActionLog actionLog = new ActionLog("Inserção de coluna vazia",
+				new ColumnMovement(null, colunaEsquerda, colunaDireita));
+
+		// Desloca as colunas à direita da posição de inserção para a direita
+		if (posicaoInsercao <= lastColumn) {
+			shiftColumnsRight(posicaoInsercao, lastColumn);
+
+			// Registrar colunas deslocadas
+			for (int col = lastColumn; col >= posicaoInsercao; col--) {
+				int targetCol = col + 1;
+				String headerName = headerMap.get(col);
+				if (headerName != null && !headerName.trim().isEmpty()) {
+					String previousIndex = PosicaoConverter.converterIndice(col + COLUMN_OFFSET);
+					String newIndex = PosicaoConverter.converterIndice(targetCol + COLUMN_OFFSET);
+					actionLog.shiftedColumns.add(new ColumnMovement(headerName, previousIndex, newIndex));
+				}
+			}
+
+			// Adiciona o log de ação
+			actionLogs.add(actionLog);
+		}
+
+		// Opcional: Define a largura da nova coluna para o padrão
+		sheet.setColumnWidth(posicaoInsercao + COLUMN_OFFSET, sheet.getDefaultColumnWidth() * 256);
+
+		return this;
+	}
+
+	// Método para exibir o log de rastreio
+	public ManipuladorPlanilha logAlteracoes() {
+		for (ActionLog actionLog : actionLogs) {
+			switch (actionLog.actionType) {
+			case "Deslocamento de colunas":
+				System.out.println(separaBloco + "Deslocamento de colunas:");
+				System.out.println("Coluna \"" + actionLog.mainMovement.columnName + "\": Índice anterior: "
+						+ actionLog.mainMovement.previousIndex + "; Novo Índice: " + actionLog.mainMovement.newIndex);
+				if (!actionLog.shiftedColumns.isEmpty()) {
+					System.out.println("Colunas deslocadas nesta ação:");
+					for (ColumnMovement cm : actionLog.shiftedColumns) {
+						System.out.println("\"" + cm.columnName + "\": Índice anterior: " + cm.previousIndex
+								+ "; Novo Índice: " + cm.newIndex);
+					}
+				}
+				System.out.println();
+				break;
+
+			case "Remoção de coluna":
+				System.out.println(separaBloco + "Remoção de coluna \"" + actionLog.mainMovement.columnName + "\" em índice "
+						+ actionLog.mainMovement.previousIndex);
+				if (!actionLog.shiftedColumns.isEmpty()) {
+					System.out.println("Colunas deslocadas nesta ação:");
+					for (ColumnMovement cm : actionLog.shiftedColumns) {
+						System.out.println("\"" + cm.columnName + "\": Índice anterior: " + cm.previousIndex
+								+ "; Novo Índice: " + cm.newIndex);
+					}
+				}
+				System.out.println();
+				break;
+
+			case "Inserção de coluna vazia":
+				System.out.println(separaBloco + "Inserção de coluna vazia entre \"" + actionLog.mainMovement.previousIndex
+						+ "\" e \"" + actionLog.mainMovement.newIndex + "\"");
+				if (!actionLog.shiftedColumns.isEmpty()) {
+					System.out.println("Colunas deslocadas nesta ação:");
+					for (ColumnMovement cm : actionLog.shiftedColumns) {
+						System.out.println("\"" + cm.columnName + "\": Índice anterior: " + cm.previousIndex
+								+ "; Novo Índice: " + cm.newIndex);
+					}
+				}
+				System.out.println();
+				break;
+
+			default:
+				// Caso haja outros tipos de ações no futuro
+				break;
+			}
+		}
+		// Limpa os logs após a exibição
+		actionLogs.clear();
+		return this;
+	}
+
+	// Método auxiliar para obter um mapa dos índices de colunas para nomes de
+	// cabeçalhos
+	private Map<Integer, String> getHeaderMap() {
+		Map<Integer, String> headerMap = new HashMap<>();
+		int lastRowNum = sheet.getLastRowNum();
+		int lastColNum = getLastColumnNum();
+
+		for (int colIndex = 0; colIndex <= lastColNum; colIndex++) {
+			String headerName = null;
+			for (int rowNum = 0; rowNum <= lastRowNum; rowNum++) {
+				Row row = sheet.getRow(rowNum);
+				if (row != null) {
+					Cell cell = row.getCell(colIndex + COLUMN_OFFSET);
+					if (cell != null) {
+						String cellValue = getCellValueAsString(cell);
+						if (cellValue != null && !cellValue.trim().isEmpty()) {
+							headerName = cellValue;
+							break; // Encontrou o primeiro valor válido
+						}
+					}
+				}
+			}
+			if (headerName != null) {
+				headerMap.put(colIndex, headerName);
+			}
+		}
+		return headerMap;
+	}
+
+	// Método auxiliar para obter o valor da célula como String
+	private String getCellValueAsString(Cell cell) {
+		if (cell == null)
+			return null;
+
+		CellType cellType = cell.getCellTypeEnum();
+		switch (cellType) {
+		case STRING:
+			return cell.getStringCellValue();
+		case NUMERIC:
+			if (DateUtil.isCellDateFormatted(cell)) {
+				return cell.getDateCellValue().toString();
+			} else {
+				return Double.toString(cell.getNumericCellValue());
+			}
+		case BOOLEAN:
+			return Boolean.toString(cell.getBooleanCellValue());
+		case FORMULA:
+			return cell.getCellFormula();
+		case ERROR:
+			return Byte.toString(cell.getErrorCellValue());
+		default:
+			return null;
+		}
+	}
+
+	// Método auxiliar para obter o índice da última coluna na planilha
+	private int getLastColumnNum() {
+		int lastCol = 0;
+		for (Row row : sheet) {
+			if (row.getLastCellNum() > lastCol) {
+				lastCol = row.getLastCellNum();
+			}
+		}
+		return lastCol - COLUMN_OFFSET - 1; // Ajuste pelo deslocamento e 1-based
+	}
+
+	private void copiarColuna(int colunaOrigem) {
+		int lastRowNum = sheet.getLastRowNum();
+		for (int i = 0; i <= lastRowNum; i++) {
+			Row row = sheet.getRow(i);
+			if (row != null) {
+				Cell cell = row.getCell(colunaOrigem + COLUMN_OFFSET);
+				if (cell != null) {
+					// Copia o valor e estilo da célula
+					CellData cellData = new CellData();
+					copiarValorParaCellData(cell, cellData);
+					copiarEstiloParaCellData(cell, cellData);
+					colunaTemporaria.put(i, cellData);
+					// Apaga a célula original
+					row.removeCell(cell);
+				}
+			}
+		}
+	}
+
+	private void copiarValorParaCellData(Cell cell, CellData cellData) {
+		CellType cellType = cell.getCellTypeEnum();
+		cellData.cellType = cellType;
+
+		switch (cellType) {
+		case STRING:
+			cellData.stringValue = cell.getStringCellValue();
+			break;
+		case NUMERIC:
+			cellData.numericValue = cell.getNumericCellValue();
+			break;
+		case BOOLEAN:
+			cellData.booleanValue = cell.getBooleanCellValue();
+			break;
+		case FORMULA:
+			cellData.formulaValue = cell.getCellFormula();
+			break;
+		case ERROR:
+			cellData.errorValue = cell.getErrorCellValue();
+			break;
+		case BLANK:
+			// Nada a fazer para células em branco
+			break;
+		default:
+			// Outros tipos de célula, se necessário
+			break;
+		}
+	}
+
+	private void copiarEstiloParaCellData(Cell cell, CellData cellData) {
+		cellData.cellStyle = cell.getCellStyle();
+	}
+
+	private void colarColunaTemporaria(int colunaDestino) {
+		for (Map.Entry<Integer, CellData> entry : colunaTemporaria.entrySet()) {
+			int rowNum = entry.getKey();
+			CellData cellData = entry.getValue();
+
+			Row row = sheet.getRow(rowNum);
+			if (row == null) {
+				row = sheet.createRow(rowNum);
+			}
+			Cell cell = row.createCell(colunaDestino + COLUMN_OFFSET);
+			colarValorDeCellData(cell, cellData);
+			cell.setCellStyle(cellData.cellStyle);
+		}
+	}
+
+	private void colarValorDeCellData(Cell cell, CellData cellData) {
+		cell.setCellType(cellData.cellType);
+
+		switch (cellData.cellType) {
+		case STRING:
+			cell.setCellValue(cellData.stringValue);
+			break;
+		case NUMERIC:
+			cell.setCellValue(cellData.numericValue);
+			break;
+		case BOOLEAN:
+			cell.setCellValue(cellData.booleanValue);
+			break;
+		case FORMULA:
+			cell.setCellFormula(cellData.formulaValue);
+			break;
+		case ERROR:
+			cell.setCellErrorValue(cellData.errorValue);
+			break;
+		case BLANK:
+			// Deixar a célula em branco
+			break;
+		default:
+			// Outros tipos de célula, se necessário
+			break;
+		}
+	}
+
+	// Métodos para deslocar colunas manualmente
+
+	private void shiftColumnsLeft(int startColumn, int endColumn) {
+		int lastRowNum = sheet.getLastRowNum();
+		for (int col = startColumn; col <= endColumn; col++) {
+			int targetCol = col - 1;
+			for (int rowNum = 0; rowNum <= lastRowNum; rowNum++) {
+				Row row = sheet.getRow(rowNum);
+				if (row != null) {
+					Cell sourceCell = row.getCell(col + COLUMN_OFFSET);
+					if (sourceCell != null) {
+						Cell targetCell = row.createCell(targetCol + COLUMN_OFFSET);
+						copiarValorEntreCelulas(sourceCell, targetCell);
+						copiarEstiloEntreCelulas(sourceCell, targetCell);
+						row.removeCell(sourceCell);
+					} else {
+						// Remove a célula de destino, se existir
+						Cell targetCell = row.getCell(targetCol + COLUMN_OFFSET);
+						if (targetCell != null) {
+							row.removeCell(targetCell);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	private void shiftColumnsRight(int startColumn, int endColumn) {
+		int lastRowNum = sheet.getLastRowNum();
+		for (int col = endColumn; col >= startColumn; col--) {
+			int targetCol = col + 1;
+			for (int rowNum = 0; rowNum <= lastRowNum; rowNum++) {
+				Row row = sheet.getRow(rowNum);
+				if (row != null) {
+					Cell sourceCell = row.getCell(col + COLUMN_OFFSET);
+					if (sourceCell != null) {
+						Cell targetCell = row.createCell(targetCol + COLUMN_OFFSET);
+						copiarValorEntreCelulas(sourceCell, targetCell);
+						copiarEstiloEntreCelulas(sourceCell, targetCell);
+						row.removeCell(sourceCell);
+					} else {
+						// Remove a célula de destino, se existir
+						Cell targetCell = row.getCell(targetCol + COLUMN_OFFSET);
+						if (targetCell != null) {
+							row.removeCell(targetCell);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Métodos para copiar valores e estilos entre células
+
+	private void copiarValorEntreCelulas(Cell sourceCell, Cell targetCell) {
+		CellType cellType = sourceCell.getCellTypeEnum();
+		targetCell.setCellType(cellType);
+
+		switch (cellType) {
+		case STRING:
+			targetCell.setCellValue(sourceCell.getStringCellValue());
+			break;
+		case NUMERIC:
+			targetCell.setCellValue(sourceCell.getNumericCellValue());
+			break;
+		case BOOLEAN:
+			targetCell.setCellValue(sourceCell.getBooleanCellValue());
+			break;
+		case FORMULA:
+			targetCell.setCellFormula(sourceCell.getCellFormula());
+			break;
+		case ERROR:
+			targetCell.setCellErrorValue(sourceCell.getErrorCellValue());
+			break;
+		case BLANK:
+			// Deixar a célula em branco
+			break;
+		default:
+			// Outros tipos de célula, se necessário
+			break;
+		}
+	}
+
+	private void copiarEstiloEntreCelulas(Cell sourceCell, Cell targetCell) {
+		targetCell.setCellStyle(sourceCell.getCellStyle());
+	}
+
+	// Classe auxiliar para armazenar os dados da célula
+	private static class CellData {
+		String stringValue;
+		String formulaValue;
+		double numericValue;
+		boolean booleanValue;
+		byte errorValue;
+		CellType cellType;
+		CellStyle cellStyle;
+	}
+
+	// Classe para registrar os movimentos das colunas
+	private static class ColumnMovement {
+		String columnName;
+		String previousIndex;
+		String newIndex;
+
+		public ColumnMovement(String columnName, String previousIndex, String newIndex) {
+			this.columnName = columnName;
+			this.previousIndex = previousIndex;
+			this.newIndex = newIndex;
+		}
+	}
+
+	// Classe para registrar as ações realizadas
+	private static class ActionLog {
+		String actionType;
+		ColumnMovement mainMovement;
+		List<ColumnMovement> shiftedColumns = new ArrayList<>();
+
+		public ActionLog(String actionType, ColumnMovement mainMovement) {
+			this.actionType = actionType;
+			this.mainMovement = mainMovement;
+		}
+	}
+}

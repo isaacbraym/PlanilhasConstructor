@@ -1,0 +1,55 @@
+package com.abnote.planilhas.interfaces;
+
+import org.apache.poi.ss.usermodel.Workbook;
+
+import com.abnote.planilhas.estilos.EstiloCelula;
+
+import java.io.IOException;
+import java.util.List;
+
+public interface IPlanilha {
+	void criarPlanilha(String nomeSheet);
+
+//    void inserirDadosColuna(List<String> dados, int numeroColuna, int linhaInicial);
+	void aplicarBoldStyle(int numeroColuna);
+
+	Workbook obterWorkbook();
+
+	// Métodos para evitar casts
+	IPlanilha naCelula(String posicao);
+
+	IPlanilha inserirDados(Object dados, String delimitador);
+
+	IPlanilha inserirDados(List<String> dados);
+
+	IPlanilha inserirDados(List<String> dados, String delimitador);
+
+	IPlanilha inserirDadosArquivo(String caminhoArquivo, String delimitador);
+
+	EstiloCelula aplicarEstilos();
+
+	IPlanilha aplicarBoldUltimaLinha(String posicaoInicial);
+
+	IPlanilha converterEmNumero(String posicaoInicial);
+
+	IPlanilha converterEmContabil(String posicaoInicial);
+
+	IPlanilha somarColunaComTexto(String posicaoInicial, String texto);
+
+	IPlanilha inserirEmLinha(String posicaoInicial, String posicaoFinal);
+
+	EstiloCelula centralizarTudo();
+
+	EstiloCelula redimensionarColunas();
+
+	EstiloCelula removerLinhasDeGrade();
+
+	// Método para salvar a planilha
+	void salvar(String nomeArquivo) throws IOException;
+
+	// Métodos para gerenciar o diretório de saída
+	void setDiretorioSaida(String diretorioSaida);
+
+	String getDiretorioSaida();
+	IPlanilha ultimaLinha(String coluna);
+}

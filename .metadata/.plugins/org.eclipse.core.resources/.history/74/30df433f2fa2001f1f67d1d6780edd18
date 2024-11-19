@@ -1,0 +1,30 @@
+import org.apache.poi.ss.usermodel.Workbook;
+import java.io.IOException;
+import java.util.List;
+
+public interface IPlanilha {
+    void criarPlanilha(String nomeSheet);
+    void inserirDadosColuna(List<String> dados, int numeroColuna, int linhaInicial);
+    void aplicarBoldStyle(int numeroColuna);
+    Workbook obterWorkbook();
+    
+    // Métodos para evitar casts
+    IPlanilha gravarDadoNaCelula(String posicao);
+    IPlanilha inserirDadosLinha(List<String> dados);
+    EstiloCelula aplicarEstilos(); // Novo método para aplicar estilos específicos
+    IPlanilha aplicarBoldUltimaLinha(String posicaoInicial);
+    IPlanilha converterEmNumero(String posicaoInicial);
+    IPlanilha somarColunaComTexto(String posicaoInicial, String texto);
+    IPlanilha inserirEmLinha(String posicaoInicial, String posicaoFinal);
+    IPlanilha inserirDadosArquivo(String caminhoArquivo);
+    EstiloCelula centralizarTudo();
+    EstiloCelula redimensionarColunas();
+    EstiloCelula removerLinhasDeGrade();
+    
+    // Método para salvar a planilha
+    void salvar(String nomeArquivo) throws IOException;
+    
+    // Métodos para gerenciar o diretório de saída
+    void setDiretorioSaida(String diretorioSaida);
+    String getDiretorioSaida();
+}

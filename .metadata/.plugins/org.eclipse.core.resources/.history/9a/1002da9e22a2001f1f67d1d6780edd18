@@ -1,0 +1,225 @@
+import org.apache.poi.ss.usermodel.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.List;
+
+public abstract class PlanilhaBase implements IPlanilha {
+    protected Workbook workbook;
+    protected Sheet sheet;
+    private int posicaoInicialColuna = 0;
+    private int posicaoInicialLinha = 0;
+    private String diretorioSaida = "C:\\opt\\tmp\\testePlanilhaSaidas";
+    private String mensagemSucesso = "Planilha criada com sucesso em: ";
+
+    protected abstract void inicializarWorkbook();
+
+    @Override
+    public void criarPlanilha(String nomeSheet) {
+        inicializarWorkbook();
+        sheet = workbook.createSheet(nomeSheet);
+        System.out.println("Planilha criada com o nome da aba: " + nomeSheet); // Log de depuração
+    }
+    // Método para inicializar o diretório de saída
+    @Override
+    public void iniciarDiretorioSaida(String diretorio) {
+        if (diretorio != null && !diretorio.isEmpty()) {
+            this.diretorioSaida = diretorio;
+        }
+        File dir = new File(diretorioSaida);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+    }
+    // Sobrecarga para iniciar diretório com caminho padrão
+    public void iniciarDiretorioSaida() {
+        iniciarDiretorioSaida(diretorioSaida);
+    }
+    // Método para salvar a planilha
+    @Override
+    public void salvarPlanilha(String caminhoArquivo) {
+        try (FileOutputStream arquivoSaida = new FileOutputStream(caminhoArquivo)) {
+            workbook.write(arquivoSaida);
+            System.out.println(mensagemSucesso + caminhoArquivo);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void inserirDadosColuna(List<String> dados, int numeroColuna, int linhaInicial) {
+        int numLinha = linhaInicial;
+        for (String valor : dados) {
+            Row linha = sheet.createRow(numLinha++);
+            Cell celula = linha.createCell(numeroColuna);
+            celula.setCellValue(valor);
+        }
+    }
+
+    public PlanilhaBase inserirDadosLinha(List<String> dados) {
+        Row linhaAtual = sheet.createRow(posicaoInicialLinha);
+        for (int i = 0; i < dados.size(); i++) {
+            Cell celula = linhaAtual.createCell(posicaoInicialColuna + i);
+            celula.setCellValue(dados.get(i));
+        }
+        return this;
+    }
+
+    public PlanilhaBase naCelula(int coluna, int linha) {
+        this.posicaoInicialColuna = coluna;
+        this.posicaoInicialLinha = linha;
+        return this;
+    }
+
+    public PlanilhaBase gravarDadoNaCelula(String posicao) {
+        int coluna = 0;
+        int linha = 0;
+
+        for (int i = 0; i < posicao.length(); i++) {
+            char ch = posicao.charAt(i);
+            if (Character.isLetter(ch)) {
+                coluna = coluna * 26 + (Character.toUpperCase(ch) - 'A' + 1);
+            } else if (Character.isDigit(ch)) {
+                linha = Integer.parseInt(posicao.substring(i)) - 1;
+                break;
+            }
+        }
+
+        this.posicaoInicialColuna = coluna - 1;
+        this.posicaoInicialLinha = linha;
+        return this;
+    }
+
+    public PlanilhaBase inserirDadosArquivo(String caminhoArquivo) {
+        try (BufferedReader br = new BufferedReader(new FileReader(caminhoArquivo))) {
+            String linhaTexto;
+            int numeroLinha = posicaoInicialLinha;
+
+            while ((linhaTexto = br.readLine()) != null) {
+                String[] valores = linhaTexto.split(";");
+                Row linha = sheet.getRow(numeroLinha);
+                if (linha == null) {
+                    linha = sheet.createRow(numeroLinha);
+                }
+
+                for (int numeroColuna = 0; numeroColuna < valores.length; numeroColuna++) {
+                    Cell celula = linha.createCell(posicaoInicialColuna + numeroColuna);
+                    celula.setCellValue(valores[numeroColuna].trim());
+                }
+                numeroLinha++;
+            }
+        } catch (IOException e) {
+            System.out.println("Erro ao ler o arquivo: " + e.getMessage());
+        }
+        return this;
+    }
+
+    // Método para aplicar estilo
+    public EstiloCelula aplicarEstilo() {
+        return new EstiloCelula(workbook, sheet);
+    }
+
+    @Override
+    public Workbook obterWorkbook() {
+        return workbook;
+    }
+    public PlanilhaBase converterEmNumero(String posicaoInicial) {
+        int[] posicao = converterPosicao(posicaoInicial);
+        int coluna = posicao[0];
+        int linhaInicial = posicao[1];
+
+        for (int i = linhaInicial; i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
+            Cell cell = row.getCell(coluna);
+            if (cell != null && cell.getCellTypeEnum() == CellType.STRING) { // Verifica se é texto
+                try {
+                    double valorNumerico = Double.parseDouble(cell.getStringCellValue());
+                    cell.setCellType(CellType.NUMERIC); // Converte para numérico
+                    cell.setCellValue(valorNumerico);    // Define o valor numérico
+                } catch (NumberFormatException e) {
+                    // Caso o conteúdo da célula não seja um número, ignore
+                    System.out.println("Célula em " + i + " não é numérica e foi ignorada.");
+                }
+            }
+        }
+        return this;
+    }
+    // Método para somar uma coluna a partir de uma posição inicial e inserir o total na última linha
+    public PlanilhaBase somarColuna(String posicaoInicial) {
+        int[] posicao = converterPosicao(posicaoInicial);
+        int coluna = posicao[0];
+        int linhaInicial = posicao[1];
+
+        double soma = 0.0;
+        int ultimaLinha = linhaInicial;
+
+        // Percorre as células da coluna para calcular a soma
+        for (int i = linhaInicial; i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
+            Cell cell = row.getCell(coluna);
+            if (cell != null && cell.getCellTypeEnum() == CellType.NUMERIC) { // Usando getCellTypeEnum() e CellType.NUMERIC
+                soma += cell.getNumericCellValue();
+            }
+            ultimaLinha = i;
+        }
+
+        // Insere o valor da soma na célula logo abaixo da última linha
+        Row linhaSoma = sheet.createRow(ultimaLinha + 1);
+        Cell cellSoma = linhaSoma.createCell(coluna);
+        cellSoma.setCellValue(soma);
+
+        return this;
+    }
+
+    // Método para somar uma coluna com um texto descritivo à esquerda do valor da soma
+    public PlanilhaBase somarColunaComTexto(String posicaoInicial, String texto) {
+        int[] posicao = converterPosicao(posicaoInicial);
+        int coluna = posicao[0];
+        int linhaInicial = posicao[1];
+
+        double soma = 0.0;
+        int ultimaLinha = linhaInicial;
+
+        // Percorre as células da coluna para calcular a soma
+        for (int i = linhaInicial; i <= sheet.getLastRowNum(); i++) {
+            Row row = sheet.getRow(i);
+            if (row == null) continue;
+            Cell cell = row.getCell(coluna);
+            if (cell != null && cell.getCellTypeEnum() == CellType.NUMERIC) { // Usando getCellTypeEnum() e CellType.NUMERIC
+                soma += cell.getNumericCellValue();
+            }
+            ultimaLinha = i;
+        }
+
+        // Insere o texto e o valor da soma na linha seguinte
+        Row linhaSoma = sheet.createRow(ultimaLinha + 1);
+        Cell cellTexto = linhaSoma.createCell(coluna - 1); // Célula à esquerda para o texto
+        cellTexto.setCellValue(texto);
+
+        Cell cellSoma = linhaSoma.createCell(coluna);
+        cellSoma.setCellValue(soma);
+
+        return this;
+    }
+
+    // Implementação do método converterPosicao para converter String (ex.: "B3") para índices de linha e coluna
+    private int[] converterPosicao(String posicao) {
+        int coluna = 0;
+        int linha = 0;
+
+        for (int i = 0; i < posicao.length(); i++) {
+            char ch = posicao.charAt(i);
+            if (Character.isLetter(ch)) {
+                coluna = coluna * 26 + (Character.toUpperCase(ch) - 'A' + 1);
+            } else if (Character.isDigit(ch)) {
+                linha = Integer.parseInt(posicao.substring(i)) - 1;
+                break;
+            }
+        }
+        return new int[]{coluna - 1, linha};
+    }
+}

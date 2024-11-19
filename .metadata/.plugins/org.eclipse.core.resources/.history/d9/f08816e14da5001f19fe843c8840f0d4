@@ -1,0 +1,138 @@
+package com.abnote.planilhas.estilos.estilos;
+
+import java.util.Map;
+
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFColor;
+import org.apache.poi.xssf.usermodel.XSSFFont;
+
+public class BoldStyle {
+
+	private final Workbook workbook;
+	private final Sheet sheet;
+	private final Map<String, CellStyle> styleCache;
+
+	public BoldStyle(Workbook workbook, Sheet sheet, Map<String, CellStyle> styleCache) {
+		this.workbook = workbook;
+		this.sheet = sheet;
+		this.styleCache = styleCache;
+	}
+
+	public void aplicarBold(int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex, int endRowIndex,
+			int endColumnIndex, boolean isRange) {
+		if (isRange) {
+			for (int rowIdx = startRowIndex; rowIdx <= endRowIndex; rowIdx++) {
+				Row row = sheet.getRow(rowIdx);
+				if (row == null)
+					continue;
+				for (int colIdx = startColumnIndex; colIdx <= endColumnIndex; colIdx++) {
+					Cell cell = row.getCell(colIdx);
+					if (cell == null)
+						continue;
+					aplicarBoldNaCelula(cell);
+				}
+			}
+		} else if (rowIndex != -1) {
+			if (columnIndex == -1) {
+				// Aplicar negrito a toda a linha
+				Row row = sheet.getRow(rowIndex);
+				if (row != null) {
+					for (Cell cell : row) {
+						if (cell != null) {
+							aplicarBoldNaCelula(cell);
+						}
+					}
+				}
+			} else {
+				// Aplicar negrito a uma célula específica
+				Row row = sheet.getRow(rowIndex);
+				if (row != null) {
+					Cell cell = row.getCell(columnIndex);
+					if (cell != null) {
+						aplicarBoldNaCelula(cell);
+					}
+				}
+			}
+		}
+	}
+
+	private void aplicarBoldNaCelula(Cell cell) {
+		CellStyle currentStyle = cell.getCellStyle();
+
+		// Obter a fonte atual
+		Font currentFont = workbook.getFontAt(currentStyle.getFontIndex());
+
+		// Verificar se já existe uma fonte com os mesmos atributos, mas com bold=true
+		Font boldFont = findOrCreateBoldFont(currentFont);
+
+		// Clonar o estilo atual e definir a nova fonte
+		CellStyle newStyle = styleCache.get("bold_" + currentStyle.hashCode());
+		if (newStyle == null) {
+			newStyle = workbook.createCellStyle();
+			newStyle.cloneStyleFrom(currentStyle);
+			newStyle.setFont(boldFont);
+			styleCache.put("bold_" + currentStyle.hashCode(), newStyle);
+		}
+
+		// Aplicar o novo estilo à célula
+		cell.setCellStyle(newStyle);
+	}
+
+	private Font findOrCreateBoldFont(Font currentFont) {
+		// Verificar se já existe uma fonte com os mesmos atributos, mas com bold=true
+		for (short i = 0; i < workbook.getNumberOfFonts(); i++) {
+			Font font = workbook.getFontAt(i);
+			if (fontsAreEqualExceptBold(font, currentFont) && font.getBold()) {
+				return font;
+			}
+		}
+
+		// Se não encontrou, criar uma nova fonte clonando a atual e setando bold=true
+		Font newFont = workbook.createFont();
+		copyFontAttributes(newFont, currentFont);
+		newFont.setBold(true);
+		return newFont;
+	}
+
+	private boolean fontsAreEqualExceptBold(Font font1, Font font2) {
+		return font1.getFontName().equals(font2.getFontName())
+				&& font1.getFontHeightInPoints() == font2.getFontHeightInPoints()
+				&& font1.getItalic() == font2.getItalic() && font1.getStrikeout() == font2.getStrikeout()
+				&& font1.getTypeOffset() == font2.getTypeOffset() && font1.getUnderline() == font2.getUnderline()
+				&& font1.getCharSet() == font2.getCharSet() && font1.getColor() == font2.getColor()
+				&& fontsHaveSameColor(font1, font2);
+	}
+
+	private void copyFontAttributes(Font newFont, Font currentFont) {
+		newFont.setFontName(currentFont.getFontName());
+		newFont.setFontHeightInPoints(currentFont.getFontHeightInPoints());
+		newFont.setItalic(currentFont.getItalic());
+		newFont.setStrikeout(currentFont.getStrikeout());
+		newFont.setTypeOffset(currentFont.getTypeOffset());
+		newFont.setUnderline(currentFont.getUnderline());
+		newFont.setCharSet(currentFont.getCharSet());
+		newFont.setColor(currentFont.getColor());
+		// Copiar a cor personalizada se for XSSFFont
+		if (currentFont instanceof XSSFFont && newFont instanceof XSSFFont) {
+			XSSFFont xssfCurrentFont = (XSSFFont) currentFont;
+			XSSFFont xssfNewFont = (XSSFFont) newFont;
+			xssfNewFont.setColor(xssfCurrentFont.getXSSFColor());
+		}
+	}
+
+	private boolean fontsHaveSameColor(Font font1, Font font2) {
+		if (font1 instanceof XSSFFont && font2 instanceof XSSFFont) {
+			XSSFColor color1 = ((XSSFFont) font1).getXSSFColor();
+			XSSFColor color2 = ((XSSFFont) font2).getXSSFColor();
+			if (color1 == null && color2 == null) {
+				return true;
+			}
+			if (color1 != null) {
+				return color1.equals(color2);
+			}
+			return false;
+		} else {
+			return font1.getColor() == font2.getColor();
+		}
+	}
+}

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
+		<item key="wrap" value="true"/>
+		<item key="casesensitive" value="false"/>
+		<item key="wholeword" value="false"/>
+		<item key="incremental" value="false"/>
+		<item key="isRegEx" value="false"/>
+		<item key="selection" value="ultimoIndiceDeColunaInserido"/>
+		<list key="findhistory">
+			<item value="colunaOrigem"/>
+			<item value="lastInsertedColIndex"/>
+			<item value="lastInsertedRowIndex"/>
+			<item value="getUltimoIndiceDelinhaInserido"/>
+			<item value="fontsAreEqualExceptBold"/>
+			<item value="copyFontAttributes"/>
+			<item value="fontsHaveSameColor"/>
+			<item value="getFontSize"/>
+			<item value="getnomeFonte"/>
+			<item value="ultimoIndiceDeColunaInserido"/>
+			<item value="FontSize"/>
+			<item value="FontName"/>
+			<item value="fontNa"/>
+			<item value="nomeFo"/>
+			<item value="fonteN"/>
+		</list>
+		<list key="replacehistory">
+			<item value="ultimoIndiceDeColunaInserido"/>
+			<item value="ultimoIndiceDeLinhaInserido"/>
+			<item value="fontesIguaisExcetoBold"/>
+			<item value="copiarAtributosDaFonte"/>
+			<item value="fontesComAMesmaCor"/>
+			<item value="getTamanhoFonte"/>
+			<item value="setTamanhoFonte"/>
+			<item value="getNomeFonte"/>
+			<item value="tamanhoFonte"/>
+			<item value="nomeFonte"/>
+			<item value="fonteAtual"/>
+			<item value="fonte2"/>
+			<item value="fonte1"/>
+			<item value="fontesComMesmaCor"/>
+			<item value="fonteAlvo"/>
+		</list>
+	</section>
+	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
+		<item key="DIALOG_X_ORIGIN" value="1490"/>
+		<item key="DIALOG_Y_ORIGIN" value="274"/>
+		<item key="DIALOG_WIDTH" value="322"/>
+		<item key="DIALOG_HEIGHT" value="391"/>
+		<item key="DIALOG_FONT_NAME" value="1|Segoe UI|9.0|0|WINDOWS|1|-12|0|0|0|400|0|0|0|1|0|0|0|0|Segoe UI"/>
+	</section>
+</section>

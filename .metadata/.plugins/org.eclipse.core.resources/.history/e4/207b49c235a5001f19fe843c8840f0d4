@@ -1,0 +1,303 @@
+package com.abnote.planilhas.estilos.estilos;
+
+import java.util.Map;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IndexedColors;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+
+public class Fontes {
+
+    private final Workbook workbook;
+    private final Sheet sheet;
+    private final Map<String, CellStyle> styleCache;
+
+    public Fontes(Workbook workbook, Sheet sheet, Map<String, CellStyle> styleCache) {
+        this.workbook = workbook;
+        this.sheet = sheet;
+        this.styleCache = styleCache;
+    }
+
+    // Método existente que aceita String
+    public void aplicarFonte(String fontName, int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex,
+            int endRowIndex, int endColumnIndex, boolean isRange) {
+        aplicarFonteGeral(fontName, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex,
+                isRange);
+    }
+
+    // Novo método que aceita FonteEnum
+    public void aplicarFonte(FonteEnum fonteEnum, int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex,
+            int endRowIndex, int endColumnIndex, boolean isRange) {
+        aplicarFonteGeral(fonteEnum.getFontName(), rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex,
+                endColumnIndex, isRange);
+    }
+
+    // Método privado que realiza a lógica comum
+    private void aplicarFonteGeral(String fontName, int rowIndex, int columnIndex, int startRowIndex,
+            int startColumnIndex, int endRowIndex, int endColumnIndex, boolean isRange) {
+
+        if (isRange) {
+            for (int rowIdx = startRowIndex; rowIdx <= endRowIndex; rowIdx++) {
+                Row row = sheet.getRow(rowIdx);
+                if (row == null)
+                    continue;
+                for (int colIdx = startColumnIndex; colIdx <= endColumnIndex; colIdx++) {
+                    Cell cell = row.getCell(colIdx);
+                    if (cell == null)
+                        continue;
+                    applyFontNameToCell(cell, fontName);
+                }
+            }
+        } else if (rowIndex != -1) {
+            if (columnIndex == -1) {
+                // Aplicar à linha inteira
+                Row row = sheet.getRow(rowIndex);
+                if (row != null) {
+                    for (Cell cell : row) {
+                        if (cell != null) {
+                            applyFontNameToCell(cell, fontName);
+                        }
+                    }
+                }
+            } else {
+                // Aplicar à célula específica
+                Row row = sheet.getRow(rowIndex);
+                if (row != null) {
+                    Cell cell = row.getCell(columnIndex);
+                    if (cell != null) {
+                        applyFontNameToCell(cell, fontName);
+                    }
+                }
+            }
+        }
+    }
+
+    private void applyFontNameToCell(Cell cell, String fontName) {
+        // Obter o estilo atual da célula
+        CellStyle currentStyle = cell.getCellStyle();
+
+        // Clonar o estilo atual
+        CellStyle newStyle = workbook.createCellStyle();
+        newStyle.cloneStyleFrom(currentStyle);
+
+        // Obter a fonte atual
+        Font currentFont = workbook.getFontAt(currentStyle.getFontIndex());
+
+        // Criar nova fonte com as alterações
+        Font newFont = workbook.createFont();
+        newFont.setFontName(fontName != null ? fontName : currentFont.getFontName());
+        newFont.setFontHeightInPoints(currentFont.getFontHeightInPoints());
+        newFont.setBold(currentFont.getBold());
+        newFont.setItalic(currentFont.getItalic());
+        newFont.setUnderline(currentFont.getUnderline());
+        newFont.setColor(currentFont.getColor());
+        newFont.setTypeOffset(currentFont.getTypeOffset());
+        newFont.setStrikeout(currentFont.getStrikeout());
+        newFont.setCharSet(currentFont.getCharSet());
+
+        // Associar a nova fonte ao novo estilo
+        newStyle.setFont(newFont);
+
+        // Aplicar o novo estilo à célula
+        cell.setCellStyle(newStyle);
+    }
+
+    public void aplicarTamanhoFonte(int fontSize, int rowIndex, int columnIndex, int startRowIndex,
+            int startColumnIndex, int endRowIndex, int endColumnIndex, boolean isRange) {
+
+        if (isRange) {
+            for (int rowIdx = startRowIndex; rowIdx <= endRowIndex; rowIdx++) {
+                Row row = sheet.getRow(rowIdx);
+                if (row == null)
+                    continue;
+                for (int colIdx = startColumnIndex; colIdx <= endColumnIndex; colIdx++) {
+                    Cell cell = row.getCell(colIdx);
+                    if (cell == null)
+                        continue;
+                    applyFontSizeToCell(cell, fontSize);
+                }
+            }
+        } else if (rowIndex != -1) {
+            if (columnIndex == -1) {
+                // Aplicar à linha inteira
+                Row row = sheet.getRow(rowIndex);
+                if (row != null) {
+                    for (Cell cell : row) {
+                        if (cell != null) {
+                            applyFontSizeToCell(cell, fontSize);
+                        }
+                    }
+                }
+            } else {
+                // Aplicar à célula específica
+                Row row = sheet.getRow(rowIndex);
+                if (row != null) {
+                    Cell cell = row.getCell(columnIndex);
+                    if (cell != null) {
+                        applyFontSizeToCell(cell, fontSize);
+                    }
+                }
+            }
+        }
+    }
+
+    private void applyFontSizeToCell(Cell cell, int fontSize) {
+        // Obter o estilo atual da célula
+        CellStyle currentStyle = cell.getCellStyle();
+
+        // Clonar o estilo atual
+        CellStyle newStyle = workbook.createCellStyle();
+        newStyle.cloneStyleFrom(currentStyle);
+
+        // Obter a fonte atual
+        Font currentFont = workbook.getFontAt(currentStyle.getFontIndex());
+
+        // Criar nova fonte com as alterações
+        Font newFont = workbook.createFont();
+        newFont.setFontName(currentFont.getFontName());
+        newFont.setFontHeightInPoints((short) fontSize);
+        newFont.setBold(currentFont.getBold());
+        newFont.setItalic(currentFont.getItalic());
+        newFont.setUnderline(currentFont.getUnderline());
+        newFont.setColor(currentFont.getColor());
+        newFont.setTypeOffset(currentFont.getTypeOffset());
+        newFont.setStrikeout(currentFont.getStrikeout());
+        newFont.setCharSet(currentFont.getCharSet());
+
+        // Associar a nova fonte ao novo estilo
+        newStyle.setFont(newFont);
+
+        // Aplicar o novo estilo à célula
+        cell.setCellStyle(newStyle);
+    }
+    // Novo método que aceita CorFonteEnum
+    public void aplicarCorFonte(CorFonteEnum corEnum, int rowIndex, int columnIndex, int startRowIndex,
+            int startColumnIndex, int endRowIndex, int endColumnIndex, boolean isRange) {
+        aplicarCorFonteGeral(corEnum, null, -1, -1, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex,
+                endColumnIndex, endColumnIndex, isRange);
+    }
+
+    // Novo método que aceita cor hexadecimal
+    public void aplicarCorFonte(String hexColor, int rowIndex, int columnIndex, int startRowIndex,
+            int startColumnIndex, int endRowIndex, int endColumnIndex, boolean isRange) {
+        aplicarCorFonteGeral(null, hexColor, -1, -1, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex,
+                endColumnIndex, isRange);
+    }
+
+    // Novo método que aceita valores RGB
+    public void aplicarCorFonte(int red, int green, int blue, int rowIndex, int columnIndex, int startRowIndex,
+            int startColumnIndex, int endRowIndex, int endColumnIndex, boolean isRange) {
+        aplicarCorFonteGeral(null, null, red, green, blue, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex,
+                endColumnIndex, isRange);
+    }
+
+    private void aplicarCorFonteGeral(CorFonteEnum corEnum, String hexColor, int red, int green, int blue, int rowIndex,
+            int columnIndex, int startRowIndex, int startColumnIndex, int endRowIndex, int endColumnIndex, boolean isRange) {
+
+        java.awt.Color awtColor = null;
+
+        if (corEnum != null) {
+            awtColor = new java.awt.Color(corEnum.getRed(), corEnum.getGreen(), corEnum.getBlue());
+        } else if (hexColor != null) {
+            awtColor = java.awt.Color.decode(hexColor);
+        } else {
+            awtColor = new java.awt.Color(red, green, blue);
+        }
+
+        if (isRange) {
+            for (int rowIdx = startRowIndex; rowIdx <= endRowIndex; rowIdx++) {
+                Row row = sheet.getRow(rowIdx);
+                if (row == null)
+                    continue;
+                for (int colIdx = startColumnIndex; colIdx <= endColumnIndex; colIdx++) {
+                    Cell cell = row.getCell(colIdx);
+                    if (cell == null)
+                        continue;
+                    applyFontColorToCell(cell, awtColor);
+                }
+            }
+        } else if (rowIndex != -1) {
+            if (columnIndex == -1) {
+                // Aplicar à linha inteira
+                Row row = sheet.getRow(rowIndex);
+                if (row != null) {
+                    for (Cell cell : row) {
+                        if (cell != null) {
+                            applyFontColorToCell(cell, awtColor);
+                        }
+                    }
+                }
+            } else {
+                // Aplicar à célula específica
+                Row row = sheet.getRow(rowIndex);
+                if (row != null) {
+                    Cell cell = row.getCell(columnIndex);
+                    if (cell != null) {
+                        applyFontColorToCell(cell, awtColor);
+                    }
+                }
+            }
+        }
+    }
+
+    private void applyFontColorToCell(Cell cell, java.awt.Color awtColor) {
+        // Obter o estilo atual da célula
+        CellStyle currentStyle = cell.getCellStyle();
+
+        // Clonar o estilo atual
+        CellStyle newStyle = workbook.createCellStyle();
+        newStyle.cloneStyleFrom(currentStyle);
+
+        // Obter a fonte atual
+        Font currentFont = workbook.getFontAt(currentStyle.getFontIndex());
+
+        // Criar nova fonte com as alterações
+        Font newFont = workbook.createFont();
+        newFont.setFontName(currentFont.getFontName());
+        newFont.setFontHeightInPoints(currentFont.getFontHeightInPoints());
+        newFont.setBold(currentFont.getBold());
+        newFont.setItalic(currentFont.getItalic());
+        newFont.setUnderline(currentFont.getUnderline());
+        newFont.setColor(getNearestColorIndex(awtColor)); // Aplicar a cor aqui
+        newFont.setTypeOffset(currentFont.getTypeOffset());
+        newFont.setStrikeout(currentFont.getStrikeout());
+        newFont.setCharSet(currentFont.getCharSet());
+
+        // Associar a nova fonte ao novo estilo
+        newStyle.setFont(newFont);
+
+        // Aplicar o novo estilo à célula
+        cell.setCellStyle(newStyle);
+    }
+
+    private short getNearestColorIndex(java.awt.Color color) {
+        // Como estamos usando Apache POI 3.17, podemos usar IndexedColors
+        // para obter a cor mais próxima disponível
+		IndexedColors closestColor = IndexedColors.AUTOMATIC;
+        double minDistance = Double.MAX_VALUE;
+
+        for (IndexedColors indexedColor : IndexedColors.values()) {
+            java.awt.Color awtIndexedColor = indexedColor.getIndex() < 64
+                    ? new java.awt.Color(indexedColor.getIndex())
+                    : new java.awt.Color(0, 0, 0);
+
+            double distance = colorDistance(color, awtIndexedColor);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestColor = indexedColor;
+            }
+        }
+        return closestColor.getIndex();
+    }
+
+    private double colorDistance(java.awt.Color c1, java.awt.Color c2) {
+        int redDiff = c1.getRed() - c2.getRed();
+        int greenDiff = c1.getGreen() - c2.getGreen();
+        int blueDiff = c1.getBlue() - c2.getBlue();
+        return Math.sqrt(redDiff * redDiff + greenDiff * greenDiff + blueDiff * blueDiff);
+    }
+}

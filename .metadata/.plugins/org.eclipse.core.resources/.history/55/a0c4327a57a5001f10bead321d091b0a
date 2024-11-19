@@ -1,0 +1,147 @@
+package com.abnote.planilhas.utils;
+
+import org.apache.poi.ss.usermodel.*;
+import java.util.HashMap;
+import java.util.Map;
+
+public class ManipuladorPlanilha {
+	private Sheet sheet;
+
+	// Mapa para armazenar dados e estilos temporariamente
+	private Map<Integer, CellData> colunaTemporaria = new HashMap<>();
+
+	public ManipuladorPlanilha(Sheet sheet) {
+		this.sheet = sheet;
+	}
+
+	public ManipuladorPlanilha moverColuna(String colunaOrigemStr, String colunaDestinoStr) {
+		int colunaOrigem = PosicaoConverter.converterColuna(colunaOrigemStr);
+		int colunaDestino = PosicaoConverter.converterColuna(colunaDestinoStr);
+
+		// Verifica se as colunas são iguais
+		if (colunaOrigem == colunaDestino) {
+			return this;
+		}
+
+		// Copia dados e estilos da coluna de origem
+		copiarColuna(colunaOrigem);
+
+		// Move as colunas para criar espaço para a coluna movida
+		if (colunaOrigem < colunaDestino) {
+			sheet.shiftColumns(colunaOrigem + 1, colunaDestino, -1);
+		} else {
+			sheet.shiftColumns(colunaDestino, colunaOrigem - 1, 1);
+		}
+
+		// Cola a coluna temporária na nova posição
+		colarColunaTemporaria(colunaDestino);
+
+		// Limpa a coluna temporária
+		colunaTemporaria.clear();
+
+		return this;
+	}
+
+	private void copiarColuna(int colunaOrigem) {
+		int lastRowNum = sheet.getLastRowNum();
+		for (int i = 0; i <= lastRowNum; i++) {
+			Row row = sheet.getRow(i);
+			if (row != null) {
+				Cell cell = row.getCell(colunaOrigem);
+				if (cell != null) {
+					// Copia o valor e estilo da célula
+					CellData cellData = new CellData();
+					copiarValorCelula(cell, cellData);
+					copiarEstiloCelula(cell, cellData);
+					colunaTemporaria.put(i, cellData);
+				}
+			}
+		}
+	}
+
+	private void copiarValorCelula(Cell cell, CellData cellData) {
+		switch (cell.getCellTypeEnum()) {
+		case STRING:
+			cellData.value = cell.getStringCellValue();
+			cellData.cellType = CellType.STRING;
+			break;
+		case NUMERIC:
+			cellData.numericValue = cell.getNumericCellValue();
+			cellData.cellType = CellType.NUMERIC;
+			break;
+		case BOOLEAN:
+			cellData.booleanValue = cell.getBooleanCellValue();
+			cellData.cellType = CellType.BOOLEAN;
+			break;
+		case FORMULA:
+			cellData.value = cell.getCellFormula();
+			cellData.cellType = CellType.FORMULA;
+			break;
+		case ERROR:
+			cellData.errorValue = cell.getErrorCellValue();
+			cellData.cellType = CellType.ERROR;
+			break;
+		case BLANK:
+			cellData.cellType = CellType.BLANK;
+			break;
+		default:
+			cellData.cellType = CellType.BLANK;
+			break;
+		}
+	}
+
+	private void copiarEstiloCelula(Cell cell, CellData cellData) {
+		cellData.cellStyle = cell.getCellStyle();
+	}
+
+	private void colarColunaTemporaria(int colunaDestino) {
+		for (Map.Entry<Integer, CellData> entry : colunaTemporaria.entrySet()) {
+			int rowNum = entry.getKey();
+			CellData cellData = entry.getValue();
+
+			Row row = sheet.getRow(rowNum);
+			if (row == null) {
+				row = sheet.createRow(rowNum);
+			}
+			Cell cell = row.createCell(colunaDestino);
+			colarValorCelula(cell, cellData);
+			cell.setCellStyle(cellData.cellStyle);
+		}
+	}
+
+	private void colarValorCelula(Cell cell, CellData cellData) {
+		switch (cellData.cellType) {
+		case STRING:
+			cell.setCellValue(cellData.value);
+			break;
+		case NUMERIC:
+			cell.setCellValue(cellData.numericValue);
+			break;
+		case BOOLEAN:
+			cell.setCellValue(cellData.booleanValue);
+			break;
+		case FORMULA:
+			cell.setCellFormula(cellData.value);
+			break;
+		case ERROR:
+			cell.setCellErrorValue(cellData.errorValue);
+			break;
+		case BLANK:
+			cell.setCellType(CellType.BLANK);
+			break;
+		default:
+			cell.setCellType(CellType.BLANK);
+			break;
+		}
+	}
+
+	// Classe auxiliar para armazenar os dados da célula
+	private static class CellData {
+		String value;
+		double numericValue;
+		boolean booleanValue;
+		byte errorValue;
+		CellType cellType;
+		CellStyle cellStyle;
+	}
+}

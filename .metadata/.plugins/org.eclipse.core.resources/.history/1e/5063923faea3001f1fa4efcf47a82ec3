@@ -1,0 +1,19 @@
+package com.abnote.planilhas.utils;
+
+public class DadosArquivoComDelimitador {
+    private String caminhoArquivo;
+    private String delimitador;
+
+    public DadosArquivoComDelimitador(String caminhoArquivo, String delimitador) {
+        this.caminhoArquivo = caminhoArquivo;
+        this.delimitador = delimitador;
+    }
+
+    public String getCaminhoArquivo() {
+        return caminhoArquivo;
+    }
+
+    public String getDelimitador() {
+        return delimitador;
+    }
+}

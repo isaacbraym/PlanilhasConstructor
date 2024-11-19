@@ -1,0 +1,81 @@
+package com.abnote.planilhas.utils;
+
+public class PositionManager {
+    private int posicaoInicialColuna = -1;
+    private int posicaoInicialLinha = -1;
+    private int posicaoFinalColuna = -1;
+    private int posicaoFinalLinha = -1;
+    private boolean intervaloDefinida = false;
+    private boolean posicaoDefinida = false;
+    private boolean todaPlanilhaDefinida = false; // Nova flag
+
+    public void naCelula(String posicao) {
+        resetarPosicao(); // Resetar antes de definir nova posição
+        int[] indices = PosicaoConverter.converterPosicao(posicao);
+        this.posicaoInicialColuna = indices[0];
+        this.posicaoInicialLinha = indices[1];
+        this.posicaoDefinida = true;
+        this.todaPlanilhaDefinida = false;
+    }
+
+    public void noIntervalo(String posicaoInicial, String posicaoFinal) {
+        resetarPosicao(); // Resetar antes de definir novo intervalo
+        int[] inicio = PosicaoConverter.converterPosicao(posicaoInicial);
+        int[] fim = PosicaoConverter.converterPosicao(posicaoFinal);
+
+        this.posicaoInicialColuna = inicio[0];
+        this.posicaoInicialLinha = inicio[1];
+        this.posicaoFinalColuna = fim[0];
+        this.posicaoFinalLinha = fim[1];
+
+        this.intervaloDefinida = true;
+        this.posicaoDefinida = false;
+        this.todaPlanilhaDefinida = false;
+    }
+
+    public void emTodaAPlanilha() {
+        resetarPosicao(); // Resetar antes de definir toda a planilha
+        this.todaPlanilhaDefinida = true;
+        this.intervaloDefinida = false;
+        this.posicaoDefinida = false;
+    }
+
+    public void resetarPosicao() {
+        this.posicaoInicialColuna = -1;
+        this.posicaoInicialLinha = -1;
+        this.posicaoFinalColuna = -1;
+        this.posicaoFinalLinha = -1;
+        this.posicaoDefinida = false;
+        this.intervaloDefinida = false;
+        this.todaPlanilhaDefinida = false;
+    }
+
+    // Getters
+    public int getPosicaoInicialColuna() {
+        return posicaoInicialColuna;
+    }
+
+    public int getPosicaoInicialLinha() {
+        return posicaoInicialLinha;
+    }
+
+    public int getPosicaoFinalColuna() {
+        return posicaoFinalColuna;
+    }
+
+    public int getPosicaoFinalLinha() {
+        return posicaoFinalLinha;
+    }
+
+    public boolean isIntervaloDefinida() {
+        return intervaloDefinida;
+    }
+
+    public boolean isPosicaoDefinida() {
+        return posicaoDefinida;
+    }
+
+    public boolean isTodaPlanilhaDefinida() {
+        return todaPlanilhaDefinida;
+    }
+}

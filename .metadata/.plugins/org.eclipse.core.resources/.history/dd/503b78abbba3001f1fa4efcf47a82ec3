@@ -1,0 +1,26 @@
+package com.abnote.planilhas.impl;
+import java.util.List;
+
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+import com.abnote.planilhas.interfaces.IPlanilha;
+
+public class PlanilhaXlsx extends PlanilhaBase {
+    @Override
+    protected void inicializarWorkbook() {
+        workbook = new XSSFWorkbook(); // Inicializa XSSFWorkbook para arquivos .xlsx
+    }
+    // Não há necessidade de sobrescrever métodos de estilo específicos aqui
+
+	@Override
+	public IPlanilha converterEmContabil() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IPlanilha ultimaLinha(String coluna) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+}

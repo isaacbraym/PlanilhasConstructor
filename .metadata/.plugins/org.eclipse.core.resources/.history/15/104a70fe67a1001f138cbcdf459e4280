@@ -1,0 +1,8 @@
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class PlanilhaXlsx extends PlanilhaBase {
+    @Override
+    protected void inicializarWorkbook() {
+        workbook = new XSSFWorkbook();
+    }
+}

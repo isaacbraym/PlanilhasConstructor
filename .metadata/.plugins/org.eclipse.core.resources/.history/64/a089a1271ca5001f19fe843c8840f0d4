@@ -1,0 +1,18 @@
+package com.abnote.planilhas.estilos.estilos;
+
+public enum FonteEnum {
+	ARIAL("Arial"), SEGOE_UI("Segoe UI"), TIMES_NEW_ROMAN("Times New Roman"), CALIBRI("Calibri"),
+	// Adicione outras fontes padrão do Windows aqui
+
+	;
+
+	private final String fontName;
+
+	FonteEnum(String fontName) {
+		this.fontName = fontName;
+	}
+
+	public String getFontName() {
+		return fontName;
+	}
+}

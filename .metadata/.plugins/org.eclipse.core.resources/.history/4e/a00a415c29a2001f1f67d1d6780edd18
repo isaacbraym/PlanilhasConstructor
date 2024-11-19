@@ -1,0 +1,26 @@
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+public class PlanilhaXlsx extends PlanilhaBase {
+    @Override
+    protected void inicializarWorkbook() {
+        workbook = new XSSFWorkbook(); // Inicializa XSSFWorkbook para arquivos .xlsx
+    }
+
+    @Override
+    public void aplicarBoldStyle(int numeroColuna) {
+        EstiloCelula estilo = aplicarEstilo();
+        String posicao = converterNumeroParaLetraColuna(numeroColuna) + "1"; // Exemplo: 0 -> "A1"
+        estilo.aplicarBoldUltimaLinha(posicao);
+    }
+
+    private String converterNumeroParaLetraColuna(int numeroColuna) {
+        StringBuilder sb = new StringBuilder();
+        int col = numeroColuna + 1;
+        while (col > 0) {
+            int rem = (col - 1) % 26;
+            sb.insert(0, (char) ('A' + rem));
+            col = (col - 1) / 26;
+        }
+        return sb.toString();
+    }
+}

@@ -1,0 +1,92 @@
+package com.abnote.planilhas.estilos.estilos;
+
+import org.apache.poi.ss.usermodel.*;
+import com.abnote.planilhas.estilos.EstiloCelula;
+
+public class BoldStyle {
+    private final Workbook workbook;
+    private final Sheet sheet;
+    private final EstiloCelula estiloCelula;
+
+    public BoldStyle(Workbook workbook, Sheet sheet, EstiloCelula estiloCelula) {
+        this.workbook = workbook;
+        this.sheet = sheet;
+        this.estiloCelula = estiloCelula;
+    }
+
+    public EstiloCelula aplicarBold() {
+        if (estiloCelula.isRange) {
+            for (int rowIdx = estiloCelula.startRowIndex; rowIdx <= estiloCelula.endRowIndex; rowIdx++) {
+                Row row = sheet.getRow(rowIdx);
+                if (row == null)
+                    continue;
+                for (int colIdx = estiloCelula.startColumnIndex; colIdx <= estiloCelula.endColumnIndex; colIdx++) {
+                    Cell cell = row.getCell(colIdx);
+                    if (cell == null)
+                        continue;
+                    applyBoldToCell(cell);
+                }
+            }
+        } else if (estiloCelula.rowIndex != -1) {
+            if (estiloCelula.columnIndex == -1) {
+                // Aplicar negrito a toda a linha
+                Row row = sheet.getRow(estiloCelula.rowIndex);
+                if (row != null) {
+                    for (Cell cell : row) {
+                        if (cell != null) {
+                            applyBoldToCell(cell);
+                        }
+                    }
+                }
+            } else {
+                // Aplicar negrito a uma célula específica
+                Row row = sheet.getRow(estiloCelula.rowIndex);
+                if (row != null) {
+                    Cell cell = row.getCell(estiloCelula.columnIndex);
+                    if (cell != null) {
+                        applyBoldToCell(cell);
+                    }
+                }
+            }
+        }
+
+        estiloCelula.redimensionarColunas();
+        return estiloCelula;
+    }
+
+    protected void applyBoldToCell(Cell cell) {
+        // Obter o estilo original da célula
+        CellStyle originalStyle = cell.getCellStyle();
+
+        // Criar um novo estilo baseado no estilo original
+        CellStyle newStyle = workbook.createCellStyle();
+        newStyle.cloneStyleFrom(originalStyle);
+
+        // Aplicar negrito
+        applyBold(newStyle);
+
+        // Aplicar o novo estilo à célula
+        cell.setCellStyle(newStyle);
+    }
+
+    public void applyBold(CellStyle style) {
+        // Obter a fonte original associada ao estilo
+        Font originalFont = workbook.getFontAt(style.getFontIndex());
+
+        // Criar uma nova fonte clonando as propriedades da fonte original
+        Font newFont = workbook.createFont();
+        newFont.setFontName(originalFont.getFontName());
+        newFont.setFontHeight(originalFont.getFontHeight());
+        newFont.setBold(true); // Definir negrito
+        newFont.setItalic(originalFont.getItalic());
+        newFont.setUnderline(originalFont.getUnderline());
+        newFont.setColor(originalFont.getColor());
+        newFont.setTypeOffset(originalFont.getTypeOffset());
+        newFont.setStrikeout(originalFont.getStrikeout());
+        newFont.setCharSet(originalFont.getCharSet());
+        // ... copie outras propriedades conforme necessário
+
+        // Associar a nova fonte ao novo estilo
+        style.setFont(newFont);
+    }
+}

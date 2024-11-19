@@ -1,0 +1,221 @@
+package com.abnote.planilhas.estilos;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+
+import com.abnote.planilhas.estilos.estilos.BackGroundColor;
+import com.abnote.planilhas.estilos.estilos.BoldStyle;
+import com.abnote.planilhas.estilos.estilos.BorderStyleHelper;
+import com.abnote.planilhas.estilos.estilos.CenterStyle;
+import com.abnote.planilhas.estilos.estilos.CorEnum;
+import com.abnote.planilhas.estilos.estilos.FonteEnum;
+import com.abnote.planilhas.estilos.estilos.Fontes;
+
+public class EstiloCelula {
+    private final Workbook workbook;
+    private final Sheet sheet;
+    private final Map<String, org.apache.poi.ss.usermodel.CellStyle> styleCache = new HashMap<>();
+
+    private int rowIndex = -1;
+    private int columnIndex = -1;
+    private int startRowIndex = 0;
+    private int startColumnIndex = 0;
+    private int endRowIndex = -1;
+    private int endColumnIndex = -1;
+    private boolean isRange = false;
+
+    // Instâncias reutilizáveis das classes de estilo
+    private final Fontes fontes;
+    private final BoldStyle boldStyle;
+    private final BorderStyleHelper borderStyleHelper;
+    private final CenterStyle centerStyle;
+    private final BackGroundColor bgColor;
+
+    public EstiloCelula(Workbook workbook, Sheet sheet) {
+        this.workbook = workbook;
+        this.sheet = sheet;
+        initializeDefaultIndices();
+
+        // Inicializar as instâncias das classes de estilo
+        this.fontes = new Fontes(workbook, sheet, styleCache);
+        this.boldStyle = new BoldStyle(workbook, sheet, styleCache);
+        this.borderStyleHelper = new BorderStyleHelper(workbook, sheet, styleCache);
+        this.centerStyle = new CenterStyle(workbook, sheet, styleCache);
+        this.bgColor = new BackGroundColor(workbook, sheet, styleCache);
+    }
+
+    public EstiloCelula(Workbook workbook, Sheet sheet, int rowIndex, int columnIndex) {
+        this(workbook, sheet);
+        this.rowIndex = rowIndex;
+        this.columnIndex = columnIndex;
+    }
+
+    public EstiloCelula(Workbook workbook, Sheet sheet, int startRowIndex, int startColumnIndex, int endRowIndex, int endColumnIndex) {
+        this(workbook, sheet);
+        this.startRowIndex = startRowIndex;
+        this.startColumnIndex = startColumnIndex;
+        this.endRowIndex = endRowIndex;
+        this.endColumnIndex = endColumnIndex;
+        this.isRange = true;
+    }
+
+    private void initializeDefaultIndices() {
+        this.endRowIndex = sheet.getLastRowNum();
+        int maxColIndex = -1;
+        for (int rowIdx = 0; rowIdx <= endRowIndex; rowIdx++) {
+            Row row = sheet.getRow(rowIdx);
+            if (row != null && row.getLastCellNum() > maxColIndex) {
+                maxColIndex = row.getLastCellNum();
+            }
+        }
+        this.endColumnIndex = maxColIndex - 1; // Ajuste para índice baseado em zero
+        this.isRange = true;
+    }
+
+    // Métodos para aplicar estilos
+
+    public EstiloCelula aplicarBold() {
+        boldStyle.aplicarBold(rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange);
+        return this;
+    }
+
+    public EstiloCelula todasAsBordasEmTudo() {
+        borderStyleHelper.todasAsBordasEmTudo(startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange);
+        return this;
+    }
+
+    public EstiloCelula aplicarBordasNaCelula(String posicao) {
+        borderStyleHelper.aplicarBordasNaCelula(posicao);
+        return this;
+    }
+
+    public EstiloCelula aplicarTodasAsBordasDeAte(String posicaoInicial, String posicaoFinal) {
+        borderStyleHelper.aplicarTodasAsBordasDeAte(posicaoInicial, posicaoFinal);
+        return this;
+    }
+
+    public EstiloCelula bordasEspessas(String posicaoInicial, String posicaoFinal) {
+        borderStyleHelper.bordasEspessas(posicaoInicial, posicaoFinal);
+        return this;
+    }
+
+    public EstiloCelula bordasEspessasComBordasInternas(String posicaoInicial, String posicaoFinal) {
+        borderStyleHelper.bordasEspessasComBordasInternas(posicaoInicial, posicaoFinal);
+        return this;
+    }
+
+    public EstiloCelula centralizarTudo() {
+        centerStyle.centralizarTudo(startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange);
+        return this;
+    }
+
+    public EstiloCelula centralizarERedimensionarTudo() {
+        centerStyle.centralizarERedimensionarTudo();
+        return this;
+    }
+
+    public EstiloCelula redimensionarColunas() {
+        centerStyle.redimensionarColunas();
+        return this;
+    }
+
+    public EstiloCelula removerLinhasDeGrade() {
+        sheet.setDisplayGridlines(false);
+        return this;
+    }
+
+    // Métodos para aplicar estilos de fonte
+
+    public EstiloCelula fonte(String fontName) {
+        fontes.aplicarFonte(fontName, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange);
+        return this;
+    }
+
+    public EstiloCelula fonte(FonteEnum fonteEnum) {
+        fontes.aplicarFonte(fonteEnum, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange);
+        return this;
+    }
+
+    public EstiloCelula fonteTamanho(int fontSize) {
+        fontes.aplicarTamanhoFonte(fontSize, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange);
+        return this;
+    }
+
+    public EstiloCelula corFonte(CorEnum corEnum) {
+        fontes.aplicarCorFonte(corEnum, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange);
+        return this;
+    }
+
+    public EstiloCelula corFonte(int red, int green, int blue) {
+        fontes.aplicarCorFonte(red, green, blue, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange);
+        return this;
+    }
+
+    public EstiloCelula corFonte(String hexColor) {
+        fontes.aplicarCorFonte(hexColor, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange);
+        return this;
+    }
+
+    // Métodos para aplicar cor de fundo
+
+    public EstiloCelula corDeFundo(CorEnum corEnum) {
+        bgColor.aplicarCorDeFundo(corEnum, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange);
+        return this;
+    }
+
+    public EstiloCelula corDeFundo(int red, int green, int blue) {
+        bgColor.aplicarCorDeFundo(red, green, blue, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange);
+        return this;
+    }
+
+    public EstiloCelula corDeFundo(String hexColor) {
+        bgColor.aplicarCorDeFundo(hexColor, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange);
+        return this;
+    }
+
+    // Getters para uso nas classes auxiliares, se necessário
+
+    public Workbook getWorkbook() {
+        return workbook;
+    }
+
+    public Sheet getSheet() {
+        return sheet;
+    }
+
+    public int getRowIndex() {
+        return rowIndex;
+    }
+
+    public int getColumnIndex() {
+        return columnIndex;
+    }
+
+    public int getStartRowIndex() {
+        return startRowIndex;
+    }
+
+    public int getStartColumnIndex() {
+        return startColumnIndex;
+    }
+
+    public int getEndRowIndex() {
+        return endRowIndex;
+    }
+
+    public int getEndColumnIndex() {
+        return endColumnIndex;
+    }
+
+    public boolean isRange() {
+        return isRange;
+    }
+
+    public Map<String, org.apache.poi.ss.usermodel.CellStyle> getStyleCache() {
+        return styleCache;
+    }
+}

@@ -1,0 +1,31 @@
+package com.abnote.planilhas.estilos.estilos;
+
+import com.abnote.planilhas.estilos.EstiloCelula;
+
+public class FonteConfigurator {
+	private final EstiloCelula estiloCelula;
+
+	public FonteConfigurator(EstiloCelula estiloCelula) {
+		this.estiloCelula = estiloCelula;
+	}
+
+	// Métodos para cada fonte pré-definida
+	public EstiloCelula ARIAL() {
+		return estiloCelula.fonte("Arial");
+	}
+
+	public EstiloCelula SEGOE_UI() {
+		return estiloCelula.fonte("Segoe UI");
+	}
+
+	public EstiloCelula TIMES_NEW_ROMAN() {
+		return estiloCelula.fonte("Times New Roman");
+	}
+
+	// Adicione mais métodos para outras fontes padrão do Windows
+
+	// Método para definir o tamanho da fonte
+	public EstiloCelula fonteTamanho(int tamanho) {
+		return estiloCelula.fonteTamanho(tamanho);
+	}
+}

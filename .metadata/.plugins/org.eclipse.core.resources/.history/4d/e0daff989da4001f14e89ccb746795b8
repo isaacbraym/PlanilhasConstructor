@@ -1,0 +1,48 @@
+package com.abnote.planilhas.estilos.estilos;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.Workbook;
+
+public class BoldStyle {
+    private final Workbook workbook;
+
+    public BoldStyle(Workbook workbook) {
+        this.workbook = workbook;
+    }
+
+    /**
+     * Aplica negrito a uma célula específica.
+     *
+     * @param cell          A célula a ser estilizada.
+     * @param styleCache    Cache de estilos para reutilização.
+     */
+    public void applyBold(Cell cell, StyleCache styleCache) {
+        CellStyle originalStyle = cell.getCellStyle();
+        String cacheKey = "bold_" + originalStyle.hashCode();
+        CellStyle boldStyle = styleCache.getStyle(cacheKey);
+
+        if (boldStyle == null) {
+            boldStyle = workbook.createCellStyle();
+            boldStyle.cloneStyleFrom(originalStyle);
+
+            Font originalFont = workbook.getFontAt(originalStyle.getFontIndex());
+            Font newFont = workbook.createFont();
+            newFont.setFontName(originalFont.getFontName());
+            newFont.setFontHeight(originalFont.getFontHeight());
+            newFont.setBold(true);
+            newFont.setItalic(originalFont.getItalic());
+            newFont.setUnderline(originalFont.getUnderline());
+            newFont.setColor(originalFont.getColor());
+            newFont.setTypeOffset(originalFont.getTypeOffset());
+            newFont.setStrikeout(originalFont.getStrikeout());
+            newFont.setCharSet(originalFont.getCharSet());
+
+            boldStyle.setFont(newFont);
+            styleCache.putStyle(cacheKey, boldStyle);
+        }
+
+        cell.setCellStyle(boldStyle);
+    }
+}
