@@ -1,9 +1,0 @@
-import org.apache.poi.ss.usermodel.Workbook;
-
-import java.util.List;
-
-public interface IPlanilha {
-    void criarPlanilha(String nomeSheet);
-    void inserirDadosColuna(List<String> dados, int numeroColuna, int linhaInicial);
-    Workbook obterWorkbook();
-}

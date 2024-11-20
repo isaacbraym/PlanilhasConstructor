@@ -26,8 +26,11 @@ public class LogsDeModificadores {
 			case "Inserção de coluna vazia":
 				exibirInsercaoDeColunaVazia(actionLog);
 				break;
+			case "Limpeza de coluna": // Novo caso para limpeza de coluna
+				exibirLimpezaDeColuna(actionLog);
+				break;
 			default:
-				// tipos de ações no futuro
+				// Tipos de ações no futuro
 				break;
 			}
 		}
@@ -61,6 +64,12 @@ public class LogsDeModificadores {
 			}
 			System.out.println(SEPARA_BLOCO2);
 		}
+	}
+
+	private void exibirLimpezaDeColuna(ActionLog actionLog) {
+		System.out.println(SEPARA_BLOCO + "Limpeza da coluna \"" + actionLog.getMainMovement().getColumnName()
+				+ "\" em índice " + actionLog.getMainMovement().getPreviousIndex());
+		System.out.println(SEPARA_BLOCO2);
 	}
 
 	private void exibirInsercaoDeColunaVazia(ActionLog actionLog) {
