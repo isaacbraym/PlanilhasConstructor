@@ -2,261 +2,292 @@ package com.abnote.planilhas.estilos.estilos;
 
 import java.util.Map;
 
-import org.apache.poi.ss.usermodel.BorderStyle;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-
+import org.apache.poi.ss.usermodel.*;
 import com.abnote.planilhas.utils.PosicaoConverter;
 
+/**
+ * Classe responsável por aplicar estilos de borda em células, intervalos ou
+ * posições específicas de uma planilha.
+ */
 public class BorderStyleHelper {
-    private final Workbook workbook;
-    private final Sheet sheet;
-    private final Map<String, CellStyle> styleCache;
+	private final Workbook workbook;
+	private final Sheet sheet;
+	private final Map<String, CellStyle> styleCache;
 
-    public BorderStyleHelper(Workbook workbook, Sheet sheet, Map<String, CellStyle> styleCache) {
-        this.workbook = workbook;
-        this.sheet = sheet;
-        this.styleCache = styleCache;
-    }
+	/**
+	 * Construtor para inicializar o BorderStyleHelper com um Workbook, Sheet e
+	 * cache de estilos.
+	 *
+	 * @param workbook   O Workbook que contém a planilha.
+	 * @param sheet      A Sheet onde os estilos serão aplicados.
+	 * @param styleCache Cache para armazenar estilos já criados.
+	 */
+	public BorderStyleHelper(Workbook workbook, Sheet sheet, Map<String, CellStyle> styleCache) {
+		this.workbook = workbook;
+		this.sheet = sheet;
+		this.styleCache = styleCache;
+	}
 
-    public void todasAsBordasEmTudo(int startRowIndex, int startColumnIndex, int endRowIndex, int endColumnIndex,
-            boolean isRange) {
-        if (isRange) {
-            for (int rowIdx = startRowIndex; rowIdx <= endRowIndex; rowIdx++) {
-                Row row = sheet.getRow(rowIdx);
-                if (row == null)
-                    continue;
-                for (int colIdx = startColumnIndex; colIdx <= endColumnIndex; colIdx++) {
-                    Cell cell = row.getCell(colIdx);
-                    if (cell == null || cell.getCellTypeEnum() == CellType.BLANK) {
-                        continue; // Pular células vazias
-                    }
-                    // Obter o estilo atual da célula
-                    CellStyle originalStyle = cell.getCellStyle();
+	/**
+	 * Aplica todas as bordas finas em um intervalo específico ou em toda a
+	 * planilha.
+	 *
+	 * @param indiceInicioLinha  Índice da primeira linha do intervalo.
+	 * @param indiceInicioColuna Índice da primeira coluna do intervalo.
+	 * @param indiceFimLinha     Índice da última linha do intervalo.
+	 * @param indiceFimColuna    Índice da última coluna do intervalo.
+	 * @param isRange            Se verdadeiro, aplica em um intervalo; caso
+	 *                           contrário, em toda a planilha.
+	 */
+	public void aplicarTodasAsBordas(int indiceInicioLinha, int indiceInicioColuna, int indiceFimLinha,
+			int indiceFimColuna, boolean isRange) {
+		if (isRange) {
+			aplicarTodasAsBordasEmIntervalo(indiceInicioLinha, indiceInicioColuna, indiceFimLinha, indiceFimColuna);
+		} else {
+			aplicarTodasAsBordasNaPlanilha();
+		}
+	}
 
-                    // Verificar se a célula já possui alguma borda espessa
-                    boolean hasThickBorder = originalStyle.getBorderTopEnum() == BorderStyle.THICK
-                            || originalStyle.getBorderBottomEnum() == BorderStyle.THICK
-                            || originalStyle.getBorderLeftEnum() == BorderStyle.THICK
-                            || originalStyle.getBorderRightEnum() == BorderStyle.THICK;
+	// Método privado para aplicar todas as bordas em um intervalo específico de
+	// células
+	private void aplicarTodasAsBordasEmIntervalo(int indiceInicioLinha, int indiceInicioColuna, int indiceFimLinha,
+			int indiceFimColuna) {
+		for (int rowIdx = indiceInicioLinha; rowIdx <= indiceFimLinha; rowIdx++) {
+			Row row = sheet.getRow(rowIdx);
+			if (row == null)
+				continue;
 
-                    if (hasThickBorder) {
-                        continue; // Ignorar células com bordas espessas
-                    }
+			for (int colIdx = indiceInicioColuna; colIdx <= indiceFimColuna; colIdx++) {
+				Cell cell = row.getCell(colIdx);
+				if (cell == null || cell.getCellTypeEnum() == CellType.BLANK) {
+					continue; // Pular células vazias
+				}
+				aplicarBordasNaCelula(cell);
+			}
+		}
+	}
 
-                    // Gerar uma chave única para o cache baseado no estilo original
-                    String cacheKey = "borders_" + originalStyle.hashCode();
-                    CellStyle borderedStyle = styleCache.get(cacheKey);
-                    if (borderedStyle == null) {
-                        // Clonar o estilo original
-                        borderedStyle = workbook.createCellStyle();
-                        borderedStyle.cloneStyleFrom(originalStyle);
-                        // Aplicar bordas finas
-                        borderedStyle.setBorderTop(BorderStyle.THIN);
-                        borderedStyle.setBorderBottom(BorderStyle.THIN);
-                        borderedStyle.setBorderLeft(BorderStyle.THIN);
-                        borderedStyle.setBorderRight(BorderStyle.THIN);
-                        // Armazenar no cache
-                        styleCache.put(cacheKey, borderedStyle);
-                    }
-                    // Aplicar o estilo com bordas à célula
-                    cell.setCellStyle(borderedStyle);
-                }
-            }
-        } else {
-            // Comportamento existente para aplicar bordas a toda a planilha
-            for (Row row : sheet) {
-                if (row == null)
-                    continue;
-                for (Cell cell : row) {
-                    if (cell == null || cell.getCellTypeEnum() == CellType.BLANK) {
-                        continue; // Pular células vazias
-                    }
-                    // Obter o estilo atual da célula
-                    CellStyle originalStyle = cell.getCellStyle();
+	// Método privado para aplicar todas as bordas em toda a planilha
+	private void aplicarTodasAsBordasNaPlanilha() {
+		for (Row row : sheet) {
+			if (row == null)
+				continue;
+			for (Cell cell : row) {
+				if (cell == null || cell.getCellTypeEnum() == CellType.BLANK) {
+					continue; // Pular células vazias
+				}
+				aplicarBordasNaCelula(cell);
+			}
+		}
+	}
 
-                    // Verificar se a célula já possui alguma borda espessa
-                    boolean hasThickBorder = originalStyle.getBorderTopEnum() == BorderStyle.THICK
-                            || originalStyle.getBorderBottomEnum() == BorderStyle.THICK
-                            || originalStyle.getBorderLeftEnum() == BorderStyle.THICK
-                            || originalStyle.getBorderRightEnum() == BorderStyle.THICK;
+	// Método privado para aplicar bordas finas em uma célula específica
+	private void aplicarBordasNaCelula(Cell cell) {
+		CellStyle estiloAtual = cell.getCellStyle();
 
-                    if (hasThickBorder) {
-                        continue; // Ignorar células com bordas espessas
-                    }
+		boolean possuiBordaEspessa = verificarBordaEspessa(estiloAtual);
+		if (possuiBordaEspessa) {
+			return; // Ignorar células com bordas espessas
+		}
 
-                    // Gerar uma chave única para o cache baseado no estilo original
-                    String cacheKey = "borders_" + originalStyle.hashCode();
-                    CellStyle borderedStyle = styleCache.get(cacheKey);
-                    if (borderedStyle == null) {
-                        // Clonar o estilo original
-                        borderedStyle = workbook.createCellStyle();
-                        borderedStyle.cloneStyleFrom(originalStyle);
-                        // Aplicar bordas finas
-                        borderedStyle.setBorderTop(BorderStyle.THIN);
-                        borderedStyle.setBorderBottom(BorderStyle.THIN);
-                        borderedStyle.setBorderLeft(BorderStyle.THIN);
-                        borderedStyle.setBorderRight(BorderStyle.THIN);
-                        // Armazenar no cache
-                        styleCache.put(cacheKey, borderedStyle);
-                    }
-                    // Aplicar o estilo com bordas à célula
-                    cell.setCellStyle(borderedStyle);
-                }
-            }
-        }
-    }
+		String chaveCache = "borders_" + estiloAtual.hashCode();
+		CellStyle estiloComBordas = styleCache.get(chaveCache);
+		if (estiloComBordas == null) {
+			estiloComBordas = criarEstiloComBordas(estiloAtual);
+			styleCache.put(chaveCache, estiloComBordas);
+		}
 
-    public void aplicarBordasNaCelula(String posicao) {
-        int[] posicaoIndices = PosicaoConverter.converterPosicao(posicao);
-        int coluna = posicaoIndices[0];
-        int linha = posicaoIndices[1];
-        Row row = sheet.getRow(linha);
-        if (row == null) {
-            row = sheet.createRow(linha);
-        }
-        Cell cell = row.getCell(coluna);
-        if (cell == null) {
-            cell = row.createCell(coluna);
-        }
-        // Preservar estilos existentes
-        CellStyle originalStyle = cell.getCellStyle();
-        CellStyle newStyle = workbook.createCellStyle();
-        newStyle.cloneStyleFrom(originalStyle);
-        newStyle.setBorderTop(BorderStyle.THIN);
-        newStyle.setBorderBottom(BorderStyle.THIN);
-        newStyle.setBorderLeft(BorderStyle.THIN);
-        newStyle.setBorderRight(BorderStyle.THIN);
-        cell.setCellStyle(newStyle);
-    }
+		cell.setCellStyle(estiloComBordas);
+	}
 
-    public void aplicarTodasAsBordasDeAte(String posicaoInicial, String posicaoFinal) {
-        int[] inicio = PosicaoConverter.converterPosicao(posicaoInicial);
-        int[] fim = PosicaoConverter.converterPosicao(posicaoFinal);
+	// Método privado para verificar se o estilo atual possui bordas espessas
+	private boolean verificarBordaEspessa(CellStyle estilo) {
+		return estilo.getBorderTopEnum() == BorderStyle.THICK || estilo.getBorderBottomEnum() == BorderStyle.THICK
+				|| estilo.getBorderLeftEnum() == BorderStyle.THICK || estilo.getBorderRightEnum() == BorderStyle.THICK;
+	}
 
-        for (int rowIdx = inicio[1]; rowIdx <= fim[1]; rowIdx++) {
-            Row row = sheet.getRow(rowIdx);
-            if (row == null) {
-                row = sheet.createRow(rowIdx);
-            }
-            for (int colIdx = inicio[0]; colIdx <= fim[0]; colIdx++) {
-                Cell cell = row.getCell(colIdx);
-                if (cell == null) {
-                    cell = row.createCell(colIdx);
-                }
-                CellStyle borderStyle = workbook.createCellStyle();
-                borderStyle.setBorderTop(BorderStyle.THIN);
-                borderStyle.setBorderBottom(BorderStyle.THIN);
-                borderStyle.setBorderLeft(BorderStyle.THIN);
-                borderStyle.setBorderRight(BorderStyle.THIN);
-                cell.setCellStyle(borderStyle);
-            }
-        }
-    }
+	// Método privado para criar um novo estilo com bordas finas
+	private CellStyle criarEstiloComBordas(CellStyle estiloOriginal) {
+		CellStyle novoEstilo = workbook.createCellStyle();
+		novoEstilo.cloneStyleFrom(estiloOriginal);
+		novoEstilo.setBorderTop(BorderStyle.THIN);
+		novoEstilo.setBorderBottom(BorderStyle.THIN);
+		novoEstilo.setBorderLeft(BorderStyle.THIN);
+		novoEstilo.setBorderRight(BorderStyle.THIN);
+		return novoEstilo;
+	}
 
-    public void bordasEspessas(String posicaoInicial, String posicaoFinal) {
-        int[] inicio = PosicaoConverter.converterPosicao(posicaoInicial);
-        int[] fim = PosicaoConverter.converterPosicao(posicaoFinal);
+	/**
+	 * Aplica bordas finas em uma célula específica baseada na posição (e.g., "A1").
+	 *
+	 * @param posicao A posição da célula (ex: "A1").
+	 */
+	public void aplicarBordasNaCelula(String posicao) {
+		int[] indicesPosicao = PosicaoConverter.converterPosicao(posicao);
+		int coluna = indicesPosicao[0];
+		int linha = indicesPosicao[1];
+		Row row = sheet.getRow(linha);
+		if (row == null) {
+			row = sheet.createRow(linha);
+		}
+		Cell cell = row.getCell(coluna);
+		if (cell == null) {
+			cell = row.createCell(coluna);
+		}
+		aplicarBordasNaCelula(cell);
+	}
 
-        for (int rowIdx = inicio[1]; rowIdx <= fim[1]; rowIdx++) {
-            Row row = sheet.getRow(rowIdx);
-            if (row == null) {
-                row = sheet.createRow(rowIdx);
-            }
-            for (int colIdx = inicio[0]; colIdx <= fim[0]; colIdx++) {
-                Cell cell = row.getCell(colIdx);
-                if (cell == null) {
-                    cell = row.createCell(colIdx);
-                }
+	/**
+	 * Aplica bordas finas entre duas posições específicas (e.g., "A1" até "C3").
+	 *
+	 * @param posicaoInicial A posição inicial (ex: "A1").
+	 * @param posicaoFinal   A posição final (ex: "C3").
+	 */
+	public void aplicarBordasEntre(String posicaoInicial, String posicaoFinal) {
+		int[] indicesInicio = PosicaoConverter.converterPosicao(posicaoInicial);
+		int[] indicesFim = PosicaoConverter.converterPosicao(posicaoFinal);
 
-                CellStyle originalStyle = cell.getCellStyle();
-                String cacheKey = "thickBorders_" + originalStyle.hashCode() + "_r" + rowIdx + "_c" + colIdx;
-                CellStyle thickBorderStyle = styleCache.get(cacheKey);
-                if (thickBorderStyle == null) {
-                    thickBorderStyle = workbook.createCellStyle();
-                    thickBorderStyle.cloneStyleFrom(originalStyle);
+		for (int rowIdx = indicesInicio[1]; rowIdx <= indicesFim[1]; rowIdx++) {
+			Row row = sheet.getRow(rowIdx);
+			if (row == null) {
+				row = sheet.createRow(rowIdx);
+			}
+			for (int colIdx = indicesInicio[0]; colIdx <= indicesFim[0]; colIdx++) {
+				Cell cell = row.getCell(colIdx);
+				if (cell == null) {
+					cell = row.createCell(colIdx);
+				}
+				aplicarBordasNaCelula(cell);
+			}
+		}
+	}
 
-                    // Aplicar bordas espessas nas bordas externas
-                    if (rowIdx == inicio[1]) { // Primeira linha do intervalo
-                        thickBorderStyle.setBorderTop(BorderStyle.THICK);
-                    }
-                    if (rowIdx == fim[1]) { // Última linha do intervalo
-                        thickBorderStyle.setBorderBottom(BorderStyle.THICK);
-                    }
-                    if (colIdx == inicio[0]) { // Primeira coluna do intervalo
-                        thickBorderStyle.setBorderLeft(BorderStyle.THICK);
-                    }
-                    if (colIdx == fim[0]) { // Última coluna do intervalo
-                        thickBorderStyle.setBorderRight(BorderStyle.THICK);
-                    }
+	/**
+	 * Aplica bordas espessas nas bordas externas de um intervalo específico (e.g.,
+	 * "A1" até "C3").
+	 *
+	 * @param posicaoInicial A posição inicial (ex: "A1").
+	 * @param posicaoFinal   A posição final (ex: "C3").
+	 */
+	public void aplicarBordasEspessas(String posicaoInicial, String posicaoFinal) {
+		int[] indicesInicio = PosicaoConverter.converterPosicao(posicaoInicial);
+		int[] indicesFim = PosicaoConverter.converterPosicao(posicaoFinal);
 
-                    // Armazenar no cache para reutilização
-                    styleCache.put(cacheKey, thickBorderStyle);
-                }
+		for (int rowIdx = indicesInicio[1]; rowIdx <= indicesFim[1]; rowIdx++) {
+			Row row = sheet.getRow(rowIdx);
+			if (row == null) {
+				row = sheet.createRow(rowIdx);
+			}
+			for (int colIdx = indicesInicio[0]; colIdx <= indicesFim[0]; colIdx++) {
+				Cell cell = row.getCell(colIdx);
+				if (cell == null) {
+					cell = row.createCell(colIdx);
+				}
 
-                // Aplicar o estilo com bordas espessas à célula
-                cell.setCellStyle(thickBorderStyle);
-            }
-        }
-    }
+				CellStyle estiloAtual = cell.getCellStyle();
+				String chaveCache = "thickBorders_" + estiloAtual.hashCode() + "_r" + rowIdx + "_c" + colIdx;
+				CellStyle estiloComBordasEspessas = styleCache.get(chaveCache);
+				if (estiloComBordasEspessas == null) {
+					estiloComBordasEspessas = criarEstiloComBordasEspessas(estiloAtual, rowIdx, colIdx, indicesInicio,
+							indicesFim);
+					styleCache.put(chaveCache, estiloComBordasEspessas);
+				}
 
-    public void bordasEspessasComBordasInternas(String posicaoInicial, String posicaoFinal) {
-        int[] inicio = PosicaoConverter.converterPosicao(posicaoInicial);
-        int[] fim = PosicaoConverter.converterPosicao(posicaoFinal);
+				cell.setCellStyle(estiloComBordasEspessas);
+			}
+		}
+	}
 
-        for (int rowIdx = inicio[1]; rowIdx <= fim[1]; rowIdx++) {
-            Row row = sheet.getRow(rowIdx);
-            if (row == null) {
-                row = sheet.createRow(rowIdx);
-            }
-            for (int colIdx = inicio[0]; colIdx <= fim[0]; colIdx++) {
-                Cell cell = row.getCell(colIdx);
-                if (cell == null) {
-                    cell = row.createCell(colIdx);
-                }
+	/**
+	 * Aplica bordas espessas nas bordas internas e externas de um intervalo
+	 * específico (e.g., "A1" até "C3").
+	 *
+	 * @param posicaoInicial A posição inicial (ex: "A1").
+	 * @param posicaoFinal   A posição final (ex: "C3").
+	 */
+	public void aplicarBordasEspessasComInternas(String posicaoInicial, String posicaoFinal) {
+		int[] indicesInicio = PosicaoConverter.converterPosicao(posicaoInicial);
+		int[] indicesFim = PosicaoConverter.converterPosicao(posicaoFinal);
 
-                CellStyle originalStyle = cell.getCellStyle();
-                StringBuilder cacheKeyBuilder = new StringBuilder("thickInternalBorders_");
-                cacheKeyBuilder.append(originalStyle.hashCode()).append("_r").append(rowIdx).append("_c")
-                        .append(colIdx);
-                String cacheKey = cacheKeyBuilder.toString();
+		for (int rowIdx = indicesInicio[1]; rowIdx <= indicesFim[1]; rowIdx++) {
+			Row row = sheet.getRow(rowIdx);
+			if (row == null) {
+				row = sheet.createRow(rowIdx);
+			}
+			for (int colIdx = indicesInicio[0]; colIdx <= indicesFim[0]; colIdx++) {
+				Cell cell = row.getCell(colIdx);
+				if (cell == null) {
+					cell = row.createCell(colIdx);
+				}
 
-                CellStyle newStyle = styleCache.get(cacheKey);
-                if (newStyle == null) {
-                    newStyle = workbook.createCellStyle();
-                    newStyle.cloneStyleFrom(originalStyle);
+				CellStyle estiloAtual = cell.getCellStyle();
+				StringBuilder chaveCacheBuilder = new StringBuilder("thickInternalBorders_");
+				chaveCacheBuilder.append(estiloAtual.hashCode()).append("_r").append(rowIdx).append("_c")
+						.append(colIdx);
+				String chaveCache = chaveCacheBuilder.toString();
 
-                    // Aplicar bordas finas em todas as direções
-                    newStyle.setBorderTop(BorderStyle.THIN);
-                    newStyle.setBorderBottom(BorderStyle.THIN);
-                    newStyle.setBorderLeft(BorderStyle.THIN);
-                    newStyle.setBorderRight(BorderStyle.THIN);
+				CellStyle novoEstilo = styleCache.get(chaveCache);
+				if (novoEstilo == null) {
+					novoEstilo = criarEstiloComBordasEspessasComInternas(estiloAtual, rowIdx, colIdx, indicesInicio,
+							indicesFim);
+					styleCache.put(chaveCache, novoEstilo);
+				}
 
-                    // Aplicar bordas espessas nas bordas externas
-                    if (rowIdx == inicio[1]) { // Primeira linha do intervalo
-                        newStyle.setBorderTop(BorderStyle.THICK);
-                    }
-                    if (rowIdx == fim[1]) { // Última linha do intervalo
-                        newStyle.setBorderBottom(BorderStyle.THICK);
-                    }
-                    if (colIdx == inicio[0]) { // Primeira coluna do intervalo
-                        newStyle.setBorderLeft(BorderStyle.THICK);
-                    }
-                    if (colIdx == fim[0]) { // Última coluna do intervalo
-                        newStyle.setBorderRight(BorderStyle.THICK);
-                    }
+				cell.setCellStyle(novoEstilo);
+			}
+		}
+	}
 
-                    // Armazenar no cache para reutilização
-                    styleCache.put(cacheKey, newStyle);
-                }
+	// Método privado para criar um estilo com bordas espessas nas bordas externas
+	private CellStyle criarEstiloComBordasEspessas(CellStyle estiloOriginal, int rowIdx, int colIdx,
+			int[] indicesInicio, int[] indicesFim) {
+		CellStyle novoEstilo = workbook.createCellStyle();
+		novoEstilo.cloneStyleFrom(estiloOriginal);
 
-                // Aplicar o novo estilo à célula
-                cell.setCellStyle(newStyle);
-            }
-        }
-    }
+		// Aplicar bordas espessas nas bordas externas
+		if (rowIdx == indicesInicio[1]) { // Primeira linha do intervalo
+			novoEstilo.setBorderTop(BorderStyle.THICK);
+		}
+		if (rowIdx == indicesFim[1]) { // Última linha do intervalo
+			novoEstilo.setBorderBottom(BorderStyle.THICK);
+		}
+		if (colIdx == indicesInicio[0]) { // Primeira coluna do intervalo
+			novoEstilo.setBorderLeft(BorderStyle.THICK);
+		}
+		if (colIdx == indicesFim[0]) { // Última coluna do intervalo
+			novoEstilo.setBorderRight(BorderStyle.THICK);
+		}
+
+		return novoEstilo;
+	}
+
+	// Método privado para criar um estilo com bordas espessas nas bordas externas e
+	// finas nas internas
+	private CellStyle criarEstiloComBordasEspessasComInternas(CellStyle estiloOriginal, int rowIdx, int colIdx,
+			int[] indicesInicio, int[] indicesFim) {
+		CellStyle novoEstilo = workbook.createCellStyle();
+		novoEstilo.cloneStyleFrom(estiloOriginal);
+
+		// Aplicar bordas finas em todas as direções
+		novoEstilo.setBorderTop(BorderStyle.THIN);
+		novoEstilo.setBorderBottom(BorderStyle.THIN);
+		novoEstilo.setBorderLeft(BorderStyle.THIN);
+		novoEstilo.setBorderRight(BorderStyle.THIN);
+
+		// Aplicar bordas espessas nas bordas externas
+		if (rowIdx == indicesInicio[1]) { // Primeira linha do intervalo
+			novoEstilo.setBorderTop(BorderStyle.THICK);
+		}
+		if (rowIdx == indicesFim[1]) { // Última linha do intervalo
+			novoEstilo.setBorderBottom(BorderStyle.THICK);
+		}
+		if (colIdx == indicesInicio[0]) { // Primeira coluna do intervalo
+			novoEstilo.setBorderLeft(BorderStyle.THICK);
+		}
+		if (colIdx == indicesFim[0]) { // Última coluna do intervalo
+			novoEstilo.setBorderRight(BorderStyle.THICK);
+		}
+
+		return novoEstilo;
+	}
 }

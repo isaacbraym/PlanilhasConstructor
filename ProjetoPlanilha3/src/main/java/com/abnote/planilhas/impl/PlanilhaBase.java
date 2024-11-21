@@ -254,7 +254,7 @@ public abstract class PlanilhaBase implements IPlanilha {
     @Override
     public EstiloCelula todasAsBordasEmTudo() {
         // Implementação real para aplicar bordas
-        aplicarEstilos().bordasEspessasComBordasInternas("A1", "Z100");
+        aplicarEstilos().aplicarBordasEspessasComInternas("A1", "Z100");
         return aplicarEstilos();
     }
 }

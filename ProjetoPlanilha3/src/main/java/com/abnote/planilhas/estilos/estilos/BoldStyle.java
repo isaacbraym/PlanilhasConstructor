@@ -6,144 +6,180 @@ import java.util.Objects;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
 
+/**
+ * Classe responsável por aplicar estilos de negrito em células, linhas ou
+ * intervalos de uma planilha.
+ */
 public class BoldStyle {
 
-    private final Workbook workbook;
-    private final Sheet sheet;
-    private final Map<String, CellStyle> styleCache;
+	private final Workbook workbook;
+	private final Sheet sheet;
+	private final Map<String, CellStyle> styleCache;
 
-    public BoldStyle(Workbook workbook, Sheet sheet, Map<String, CellStyle> styleCache) {
-        this.workbook = workbook;
-        this.sheet = sheet;
-        this.styleCache = styleCache;
-    }
+	/**
+	 * Construtor para inicializar o BoldStyle com um Workbook, Sheet e cache de
+	 * estilos.
+	 *
+	 * @param workbook   O Workbook que contém a planilha.
+	 * @param sheet      A Sheet onde os estilos serão aplicados.
+	 * @param styleCache Cache para armazenar estilos já criados.
+	 */
+	public BoldStyle(Workbook workbook, Sheet sheet, Map<String, CellStyle> styleCache) {
+		this.workbook = workbook;
+		this.sheet = sheet;
+		this.styleCache = styleCache;
+	}
 
-    public void aplicarBold(int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex,
-                            int endRowIndex, int endColumnIndex, boolean isRange) {
-        if (isRange) {
-            aplicarBoldEmIntervalo(startRowIndex, startColumnIndex, endRowIndex, endColumnIndex);
-        } else if (rowIndex != -1) {
-            if (columnIndex == -1) {
-                aplicarBoldEmLinha(rowIndex);
-            } else {
-                aplicarBoldEmCelulaEspecifica(rowIndex, columnIndex);
-            }
-        }
-    }
+	/**
+	 * Aplica negrito em uma célula específica, em uma linha inteira ou em um
+	 * intervalo de células.
+	 *
+	 * @param rowIndex         Índice da linha (-1 para não especificar).
+	 * @param columnIndex      Índice da coluna (-1 para não especificar).
+	 * @param startRowIndex    Índice da primeira linha do intervalo.
+	 * @param startColumnIndex Índice da primeira coluna do intervalo.
+	 * @param endRowIndex      Índice da última linha do intervalo.
+	 * @param endColumnIndex   Índice da última coluna do intervalo.
+	 * @param isRange          Se verdadeiro, aplica em um intervalo; caso
+	 *                         contrário, aplica em linha ou célula específica.
+	 */
+	public void aplicarNegrito(int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex, int endRowIndex,
+			int endColumnIndex, boolean isRange) {
+		if (isRange) {
+			aplicarNegritoEmIntervalo(startRowIndex, startColumnIndex, endRowIndex, endColumnIndex);
+		} else if (rowIndex != -1) {
+			if (columnIndex == -1) {
+				aplicarNegritoEmLinha(rowIndex);
+			} else {
+				aplicarNegritoEmCelulaEspecifica(rowIndex, columnIndex);
+			}
+		}
+	}
 
-    private void aplicarBoldEmIntervalo(int startRowIndex, int startColumnIndex,
-                                        int endRowIndex, int endColumnIndex) {
-        for (int rowIdx = startRowIndex; rowIdx <= endRowIndex; rowIdx++) {
-            Row row = sheet.getRow(rowIdx);
-            if (row == null) continue;
+	// Método privado para aplicar negrito em um intervalo específico de células
+	private void aplicarNegritoEmIntervalo(int startRowIndex, int startColumnIndex, int endRowIndex,
+			int endColumnIndex) {
+		for (int rowIdx = startRowIndex; rowIdx <= endRowIndex; rowIdx++) {
+			Row row = sheet.getRow(rowIdx);
+			if (row == null)
+				continue;
 
-            for (int colIdx = startColumnIndex; colIdx <= endColumnIndex; colIdx++) {
-                Cell cell = row.getCell(colIdx);
-                if (cell == null) continue;
-                aplicarBoldNaCelula(cell);
-            }
-        }
-    }
+			for (int colIdx = startColumnIndex; colIdx <= endColumnIndex; colIdx++) {
+				Cell cell = row.getCell(colIdx);
+				if (cell == null)
+					continue;
+				aplicarNegritoNaCelula(cell);
+			}
+		}
+	}
 
-    private void aplicarBoldEmLinha(int rowIndex) {
-        Row row = sheet.getRow(rowIndex);
-        if (row != null) {
-            for (Cell cell : row) {
-                if (cell != null) {
-                    aplicarBoldNaCelula(cell);
-                }
-            }
-        }
-    }
+	// Método privado para aplicar negrito em toda uma linha
+	private void aplicarNegritoEmLinha(int rowIndex) {
+		Row row = sheet.getRow(rowIndex);
+		if (row != null) {
+			for (Cell cell : row) {
+				if (cell != null) {
+					aplicarNegritoNaCelula(cell);
+				}
+			}
+		}
+	}
 
-    private void aplicarBoldEmCelulaEspecifica(int rowIndex, int columnIndex) {
-        Row row = sheet.getRow(rowIndex);
-        if (row != null) {
-            Cell cell = row.getCell(columnIndex);
-            if (cell != null) {
-                aplicarBoldNaCelula(cell);
-            }
-        }
-    }
+	// Método privado para aplicar negrito em uma célula específica
+	private void aplicarNegritoEmCelulaEspecifica(int rowIndex, int columnIndex) {
+		Row row = sheet.getRow(rowIndex);
+		if (row != null) {
+			Cell cell = row.getCell(columnIndex);
+			if (cell != null) {
+				aplicarNegritoNaCelula(cell);
+			}
+		}
+	}
 
-    private void aplicarBoldNaCelula(Cell cell) {
-        CellStyle currentStyle = cell.getCellStyle();
-        Font currentFont = workbook.getFontAt(currentStyle.getFontIndex());
+	// Método privado para aplicar negrito em uma célula específica
+	private void aplicarNegritoNaCelula(Cell cell) {
+		CellStyle estiloAtual = cell.getCellStyle();
+		Font fonteAtual = workbook.getFontAt(estiloAtual.getFontIndex());
 
-        Font boldFont = encontrarOuCriarFonteBold(currentFont);
+		Font fonteNegrito = obterOuCriarFonteNegrito(fonteAtual);
 
-        String styleKey = "bold_" + currentStyle.hashCode();
-        CellStyle newStyle = styleCache.get(styleKey);
-        if (newStyle == null) {
-            newStyle = workbook.createCellStyle();
-            newStyle.cloneStyleFrom(currentStyle);
-            newStyle.setFont(boldFont);
-            styleCache.put(styleKey, newStyle);
-        }
+		String chaveEstilo = "bold_" + estiloAtual.hashCode();
+		CellStyle novoEstilo = styleCache.get(chaveEstilo);
+		if (novoEstilo == null) {
+			novoEstilo = workbook.createCellStyle();
+			novoEstilo.cloneStyleFrom(estiloAtual);
+			novoEstilo.setFont(fonteNegrito);
+			styleCache.put(chaveEstilo, novoEstilo);
+		}
 
-        cell.setCellStyle(newStyle);
-    }
+		cell.setCellStyle(novoEstilo);
+	}
 
-    private Font encontrarOuCriarFonteBold(Font currentFont) {
-        Font boldFont = buscarFonteBoldExistente(currentFont);
-        if (boldFont != null) {
-            return boldFont;
-        } else {
-            return criarFonteBold(currentFont);
-        }
-    }
+	// Método privado para obter uma fonte negrito existente ou criar uma nova
+	private Font obterOuCriarFonteNegrito(Font fonteAtual) {
+		Font fonteNegritoExistente = buscarFonteNegritoExistente(fonteAtual);
+		if (fonteNegritoExistente != null) {
+			return fonteNegritoExistente;
+		} else {
+			return criarFonteNegrito(fonteAtual);
+		}
+	}
 
-    private Font buscarFonteBoldExistente(Font currentFont) {
-        for (short i = 0; i < workbook.getNumberOfFonts(); i++) {
-            Font font = workbook.getFontAt(i);
-            if (font.getBold() && fontesIguaisExcetoBold(font, currentFont)) {
-                return font;
-            }
-        }
-        return null;
-    }
+	// Método privado para buscar uma fonte negrito existente que corresponda à
+	// fonte atual (exceto negrito)
+	private Font buscarFonteNegritoExistente(Font fonteAtual) {
+		for (short i = 0; i < workbook.getNumberOfFonts(); i++) {
+			Font fonte = workbook.getFontAt(i);
+			if (fonte.getBold() && fontesSaoIguaisExcetoNegrito(fonte, fonteAtual)) {
+				return fonte;
+			}
+		}
+		return null;
+	}
 
-    private Font criarFonteBold(Font currentFont) {
-        Font newFont = workbook.createFont();
-        copiarAtributosDaFonte(currentFont, newFont);
-        newFont.setBold(true);
-        return newFont;
-    }
+	// Método privado para criar uma nova fonte negrito baseada na fonte atual
+	private Font criarFonteNegrito(Font fonteAtual) {
+		Font novaFonte = workbook.createFont();
+		copiarAtributosFonte(fonteAtual, novaFonte);
+		novaFonte.setBold(true);
+		return novaFonte;
+	}
 
-    private boolean fontesIguaisExcetoBold(Font font1, Font font2) {
-        return font1.getFontName().equals(font2.getFontName())
-            && font1.getFontHeightInPoints() == font2.getFontHeightInPoints()
-            && font1.getItalic() == font2.getItalic()
-            && font1.getStrikeout() == font2.getStrikeout()
-            && font1.getTypeOffset() == font2.getTypeOffset()
-            && font1.getUnderline() == font2.getUnderline()
-            && font1.getCharSet() == font2.getCharSet()
-            && fontesComAMesmaCor(font1, font2);
-    }
+	// Método privado para verificar se duas fontes são iguais exceto pelo atributo
+	// negrito
+	private boolean fontesSaoIguaisExcetoNegrito(Font fonte1, Font fonte2) {
+		return fonte1.getFontName().equals(fonte2.getFontName())
+				&& fonte1.getFontHeightInPoints() == fonte2.getFontHeightInPoints()
+				&& fonte1.getItalic() == fonte2.getItalic() && fonte1.getStrikeout() == fonte2.getStrikeout()
+				&& fonte1.getTypeOffset() == fonte2.getTypeOffset() && fonte1.getUnderline() == fonte2.getUnderline()
+				&& fonte1.getCharSet() == fonte2.getCharSet() && fontesSaoComAMesmaCor(fonte1, fonte2);
+	}
 
-    private void copiarAtributosDaFonte(Font sourceFont, Font targetFont) {
-        targetFont.setFontName(sourceFont.getFontName());
-        targetFont.setFontHeightInPoints(sourceFont.getFontHeightInPoints());
-        targetFont.setItalic(sourceFont.getItalic());
-        targetFont.setStrikeout(sourceFont.getStrikeout());
-        targetFont.setTypeOffset(sourceFont.getTypeOffset());
-        targetFont.setUnderline(sourceFont.getUnderline());
-        targetFont.setCharSet(sourceFont.getCharSet());
-        targetFont.setColor(sourceFont.getColor());
+	// Método privado para copiar atributos de uma fonte para outra
+	private void copiarAtributosFonte(Font fonteOrigem, Font fonteDestino) {
+		fonteDestino.setFontName(fonteOrigem.getFontName());
+		fonteDestino.setFontHeightInPoints(fonteOrigem.getFontHeightInPoints());
+		fonteDestino.setItalic(fonteOrigem.getItalic());
+		fonteDestino.setStrikeout(fonteOrigem.getStrikeout());
+		fonteDestino.setTypeOffset(fonteOrigem.getTypeOffset());
+		fonteDestino.setUnderline(fonteOrigem.getUnderline());
+		fonteDestino.setCharSet(fonteOrigem.getCharSet());
+		fonteDestino.setColor(fonteOrigem.getColor());
 
-        if (sourceFont instanceof XSSFFont && targetFont instanceof XSSFFont) {
-            XSSFColor color = ((XSSFFont) sourceFont).getXSSFColor();
-            ((XSSFFont) targetFont).setColor(color);
-        }
-    }
+		if (fonteOrigem instanceof XSSFFont && fonteDestino instanceof XSSFFont) {
+			XSSFColor cor = ((XSSFFont) fonteOrigem).getXSSFColor();
+			((XSSFFont) fonteDestino).setColor(cor);
+		}
+	}
 
-    private boolean fontesComAMesmaCor(Font font1, Font font2) {
-        if (font1 instanceof XSSFFont && font2 instanceof XSSFFont) {
-            XSSFColor color1 = ((XSSFFont) font1).getXSSFColor();
-            XSSFColor color2 = ((XSSFFont) font2).getXSSFColor();
-            return Objects.equals(color1, color2);
-        } else {
-            return font1.getColor() == font2.getColor();
-        }
-    }
+	// Método privado para verificar se duas fontes têm a mesma cor
+	private boolean fontesSaoComAMesmaCor(Font fonte1, Font fonte2) {
+		if (fonte1 instanceof XSSFFont && fonte2 instanceof XSSFFont) {
+			XSSFColor cor1 = ((XSSFFont) fonte1).getXSSFColor();
+			XSSFColor cor2 = ((XSSFFont) fonte2).getXSSFColor();
+			return Objects.equals(cor1, cor2);
+		} else {
+			return fonte1.getColor() == fonte2.getColor();
+		}
+	}
 }

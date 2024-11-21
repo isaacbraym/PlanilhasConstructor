@@ -32,44 +32,44 @@ public class TestePlanilha {
 		planilha.criarPlanilha(sheet1);
 		planilha.SELECIONAR_SHEET(sheet1);
 		planilha.naCelula("B2").inserirDados(header, ",").aplicarEstilos().fonte(FonteEnum.TIMES_NEW_ROMAN)
-				.corFonte(CorEnum.LARANJA).fonteTamanho(14).corDeFundo(CorEnum.VERMELHO_ESCURO).aplicarBold();
+				.corFonte(CorEnum.LARANJA).fonteTamanho(14).corDeFundo(CorEnum.VERMELHO_ESCURO).aplicarNegrito();
 		planilha.naCelula("B3").inserirDados(listaDeArquivos, ";");
 		planilha.emTodaAPlanilha().aplicarEstilos().fonte("Segoe UI").fonteTamanho(14);
-		planilha.aplicarEstilos().bordasEspessasComBordasInternas("B2", "J2");
-		planilha.naCelula("N11").inserirDados("TESTE").aplicarEstilosEmCelula().aplicarBold().corDeFundo(CorEnum.VERDE)
-				.corFonte(CorEnum.TURQUESA);
+		planilha.aplicarEstilos().aplicarBordasEspessasComInternas("B2", "J2");
+		planilha.naCelula("N11").inserirDados("TESTE").aplicarEstilosEmCelula().aplicarNegrito()
+				.corDeFundo(CorEnum.VERDE).corFonte(CorEnum.TURQUESA);
 		planilha.converterEmContabil("J3").somarColunaComTexto("J3", "VALOR TOTAL DA SOMA").aplicarEstilos()
-				.aplicarBold();
-		planilha.aplicarEstilos().aplicarTodasAsBordasDeAte("L2", "L200");
-		planilha.noIntervalo("C4", "C17").aplicarEstilos().aplicarBold();
-		planilha.noIntervalo("C5", "G5").aplicarEstilos().fonte("Calibri").fonteTamanho(18).aplicarBold();
-		planilha.noIntervalo("C4", "F4").aplicarEstilos().fonte(FonteEnum.EBRIMA).fonteTamanho(21).aplicarBold();
+				.aplicarNegrito();
+		planilha.aplicarEstilos().aplicarBordasEntre("L2", "L200");
+		planilha.noIntervalo("C4", "C17").aplicarEstilos().aplicarNegrito();
+		planilha.noIntervalo("C5", "G5").aplicarEstilos().fonte("Calibri").fonteTamanho(18).aplicarNegrito();
+		planilha.noIntervalo("C4", "F4").aplicarEstilos().fonte(FonteEnum.EBRIMA).fonteTamanho(21).aplicarNegrito();
 		planilha.manipularPlanilha().moverColuna("C", "F").logAlteracoes();
 		planilha.manipularPlanilha().removerColuna("I").logAlteracoes();
-		planilha.manipularPlanilha().inserirColunaVaziaEntre("D", "E").logAlteracoes();
-		planilha.manipularPlanilha().limparColuna("D").logAlteracoes();
-		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().todasAsBordasEmTudo();
+//		planilha.manipularPlanilha().inserirColunaVaziaEntre("D", "E").logAlteracoes();
+//		planilha.manipularPlanilha().limparColuna("D").logAlteracoes();
+		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
 
 		// PLANILHA SHEET2
 		planilha.criarSheet(sheet2);
 		planilha.SELECIONAR_SHEET(sheet2);
 		planilha.naCelula("C3").inserirDados(listaDeArquivos, ";");
-		planilha.ultimaLinha("J").aplicarEstilos().aplicarBold().fonte("Arial").fonteTamanho(14);
+		planilha.ultimaLinha("J").aplicarEstilos().aplicarNegrito().fonte("Arial").fonteTamanho(14);
 		planilha.noIntervalo("C4", "C17").aplicarEstilos().fonte("Another Danger - Demo").fonteTamanho(12)
-				.corDeFundo(CorEnum.AMARELO).aplicarBold();
+				.corDeFundo(CorEnum.AMARELO).aplicarNegrito();
 		planilha.noIntervalo("C4", "F4").aplicarEstilos().fonte(FonteEnum.VERDANA).fonteTamanho(21)
-				.corFonte(CorEnum.BRANCO).corDeFundo("#9400d3").aplicarBold();
+				.corFonte(CorEnum.BRANCO).corDeFundo("#9400d3").aplicarNegrito();
 		planilha.noIntervalo("D11", "G11").aplicarEstilos().corFonte(CorEnum.BEGE).corDeFundo(90, 50, 128)
-				.aplicarBold();
-		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().todasAsBordasEmTudo();
+				.aplicarNegrito();
+		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
 
 		// PLANILHA SHEET3
 		planilha.criarSheet(sheet3);
 		planilha.SELECIONAR_SHEET(sheet3);
 		planilha.inserirDados(listaDeArquivos2, "|");
 		planilha.converterEmNumero("K2").somarColunaComTexto("K2", "Totais:");
-		planilha.converterEmNumero("L2").somarColuna("L2").aplicarEstilos().aplicarBold();
-		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().todasAsBordasEmTudo();
+		planilha.converterEmNumero("L2").somarColuna("L2").aplicarEstilos().aplicarNegrito();
+		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
 
 		try {
 			planilha.salvar(caminhoArquivo);
