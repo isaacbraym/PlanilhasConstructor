@@ -167,8 +167,8 @@ public abstract class PlanilhaBase implements IPlanilha {
         updateLastInsertedIndices();
         return this;
     }
-
-    @Override
+    
+     @Override
     public IManipulacaoDados converterEmNumero(String posicaoInicial) {
         Conversores.converterEmNumero(sheet, posicaoInicial);
         return this;

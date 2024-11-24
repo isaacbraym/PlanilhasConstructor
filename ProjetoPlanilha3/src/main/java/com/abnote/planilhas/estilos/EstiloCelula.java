@@ -117,6 +117,36 @@ public class EstiloCelula {
 	}
 
 	/**
+	 * Aplica o estilo itálico em uma célula específica, em uma linha inteira ou em
+	 * um intervalo de células.
+	 *
+	 * @return Instância atual de EstiloCelula para encadeamento de métodos.
+	 */
+	public EstiloCelula aplicarItalico() {
+		fontes.aplicarItalico(rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex,
+				isRange);
+		return this;
+	}
+
+	/**
+	 * Aplica o estilo sublinhado em uma célula específica, em uma linha inteira ou
+	 * em um intervalo de células.
+	 *
+	 * @return Instância atual de EstiloCelula para encadeamento de métodos.
+	 */
+	public EstiloCelula aplicarSublinhado() {
+		fontes.aplicarSublinhado(rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex,
+				isRange);
+		return this;
+	}
+	
+    public EstiloCelula aplicarTachado() {
+        fontes.aplicarTachado(rowIndex, columnIndex, startRowIndex, startColumnIndex,
+                             endRowIndex, endColumnIndex, isRange);
+        return this;
+	}
+
+	/**
 	 * Método auxiliar para obter o maior índice de coluna na planilha.
 	 *
 	 * @param sheet A Sheet para verificar.
@@ -369,43 +399,43 @@ public class EstiloCelula {
 
 	// Getters para uso nas classes auxiliares (se necessário)
 
-	public Workbook getWorkbook() {
+	private Workbook getWorkbook() {
 		return workbook;
 	}
 
-	public Sheet getSheet() {
+	private Sheet getSheet() {
 		return sheet;
 	}
 
-	public int getRowIndex() {
+	private int getRowIndex() {
 		return rowIndex;
 	}
 
-	public int getColumnIndex() {
+	private int getColumnIndex() {
 		return columnIndex;
 	}
 
-	public int getStartRowIndex() {
+	private int getStartRowIndex() {
 		return startRowIndex;
 	}
 
-	public int getStartColumnIndex() {
+	private int getStartColumnIndex() {
 		return startColumnIndex;
 	}
 
-	public int getEndRowIndex() {
+	private int getEndRowIndex() {
 		return endRowIndex;
 	}
 
-	public int getEndColumnIndex() {
+	private int getEndColumnIndex() {
 		return endColumnIndex;
 	}
 
-	public boolean isRange() {
+	private boolean isRange() {
 		return isRange;
 	}
 
-	public Map<String, org.apache.poi.ss.usermodel.CellStyle> getStyleCache() {
+	private Map<String, org.apache.poi.ss.usermodel.CellStyle> getStyleCache() {
 		return styleCache;
 	}
 }

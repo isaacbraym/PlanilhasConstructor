@@ -39,13 +39,17 @@ public class TestePlanilha {
 		planilha.naCelula("N11").inserirDados("TESTE").aplicarEstilosEmCelula().aplicarNegrito()
 				.corDeFundo(CorEnum.VERDE).corFonte(CorEnum.TURQUESA);
 		planilha.converterEmContabil("J3").somarColunaComTexto("J3", "VALOR TOTAL DA SOMA").aplicarEstilos()
-				.aplicarNegrito();
+				.aplicarItalico().aplicarNegrito();
 		planilha.aplicarEstilos().aplicarBordasEntre("L2", "L200");
 		planilha.noIntervalo("C4", "C17").aplicarEstilos().aplicarNegrito();
 		planilha.noIntervalo("C5", "G5").aplicarEstilos().fonte("Calibri").fonteTamanho(18).aplicarNegrito();
 		planilha.noIntervalo("C4", "F4").aplicarEstilos().fonte(FonteEnum.EBRIMA).fonteTamanho(21).aplicarNegrito();
 		planilha.manipularPlanilha().moverColuna("C", "F").logAlteracoes();
 		planilha.manipularPlanilha().removerColuna("I").logAlteracoes();
+		planilha.noIntervalo("G10", "G20").aplicarEstilos().corDeFundo(CorEnum.ROXO).corFonte(CorEnum.BRANCO);
+		planilha.noIntervalo("G15", "G20").aplicarEstilos().aplicarItalico().aplicarNegrito();
+		planilha.noIntervalo("G18", "G22").aplicarEstilos().aplicarNegrito().aplicarSublinhado();
+		planilha.noIntervalo("F20", "H20").aplicarEstilos().aplicarTachado().aplicarNegrito();
 //		planilha.manipularPlanilha().inserirColunaVaziaEntre("D", "E").logAlteracoes();
 //		planilha.manipularPlanilha().limparColuna("D").logAlteracoes();
 		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();

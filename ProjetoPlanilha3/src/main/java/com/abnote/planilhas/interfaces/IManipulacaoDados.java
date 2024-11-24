@@ -31,4 +31,5 @@ public interface IManipulacaoDados {
 	IManipulacaoDados somarColuna(String posicaoInicial);
 
 	IManipulacaoDados somarColunaComTexto(String posicaoInicial, String texto);
+
 }

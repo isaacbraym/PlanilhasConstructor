@@ -26,6 +26,27 @@ public class Fontes {
 				(Cell cell) -> applyFontAttributesToCell(cell, attributes));
 	}
 
+	public void aplicarItalico(int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex, int endRowIndex,
+			int endColumnIndex, boolean isRange) {
+		FontAttributes attributes = new FontAttributes().setItalic(true);
+		aplicarAtributosFonte(attributes, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex,
+				endColumnIndex, isRange);
+	}
+
+	public void aplicarSublinhado(int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex,
+			int endRowIndex, int endColumnIndex, boolean isRange) {
+		FontAttributes attributes = new FontAttributes().setUnderline(Font.U_SINGLE);
+		aplicarAtributosFonte(attributes, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex,
+				endColumnIndex, isRange);
+	}
+
+	public void aplicarTachado(int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex, int endRowIndex,
+			int endColumnIndex, boolean isRange) {
+		FontAttributes attributes = new FontAttributes().setStrikeout(true); // Agora funciona
+		aplicarAtributosFonte(attributes, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex,
+				endColumnIndex, isRange);
+	}
+
 	// Método para iterar sobre as células e aplicar uma ação
 	private void iterateCells(int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex, int endRowIndex,
 			int endColumnIndex, boolean isRange, CellAction action) {
@@ -132,6 +153,9 @@ public class Fontes {
 		if (attributes.getUnderline() != null && font.getUnderline() != attributes.getUnderline()) {
 			return false;
 		}
+		if (attributes.isStrikeout() != null && font.getStrikeout() != attributes.isStrikeout()) {
+			return false;
+		}
 		if (attributes.getColorRGB() != null && !fontsHaveSameRGBColor(font, attributes.getColorRGB())) {
 			return false;
 		}
@@ -158,6 +182,9 @@ public class Fontes {
 		if (attributes.getUnderline() == null && font1.getUnderline() != font2.getUnderline()) {
 			return false;
 		}
+		if (attributes.isStrikeout() == null && font1.getStrikeout() != font2.getStrikeout()) {
+			return false;
+		}
 		if (attributes.getColorRGB() == null && !fontsHaveSameColor(font1, font2)) {
 			return false;
 		}
@@ -173,7 +200,7 @@ public class Fontes {
 		newFont.setItalic(attributes.isItalic() != null ? attributes.isItalic() : currentFont.getItalic());
 		newFont.setUnderline(
 				attributes.getUnderline() != null ? attributes.getUnderline() : currentFont.getUnderline());
-		newFont.setStrikeout(currentFont.getStrikeout());
+		newFont.setStrikeout(attributes.isStrikeout() != null ? attributes.isStrikeout() : currentFont.getStrikeout());
 		newFont.setCharSet(currentFont.getCharSet());
 		newFont.setTypeOffset(currentFont.getTypeOffset());
 
@@ -278,4 +305,6 @@ public class Fontes {
 		}
 		return Color.decode(hexColor);
 	}
+
+	// Criar métodos para aplicar outros estilos dealinhamentos,quebra de texto, etc.
 }
