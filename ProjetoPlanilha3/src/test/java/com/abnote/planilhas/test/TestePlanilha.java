@@ -47,12 +47,15 @@ public class TestePlanilha {
 		planilha.manipularPlanilha().moverColuna("C", "F").logAlteracoes();
 		planilha.manipularPlanilha().removerColuna("I").logAlteracoes();
 		planilha.noIntervalo("G10", "G20").aplicarEstilos().corDeFundo(CorEnum.ROXO).corFonte(CorEnum.BRANCO);
-		planilha.noIntervalo("G15", "G20").aplicarEstilos().aplicarItalico().aplicarNegrito();
-		planilha.noIntervalo("G18", "G22").aplicarEstilos().aplicarNegrito().aplicarSublinhado();
+		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
+		planilha.noIntervalo("G15", "G20").aplicarEstilos().aplicarItalico().aplicarNegrito().alinharADireita();
+		planilha.noIntervalo("G18", "G22").aplicarEstilos().aplicarNegrito().aplicarSublinhado().alinharAEsquerda();
 		planilha.noIntervalo("F20", "H20").aplicarEstilos().aplicarTachado().aplicarNegrito();
+		planilha.noIntervalo("G4", "H4").mesclarCelulas().aplicarEstilos().corDeFundo(CorEnum.VERMELHO_ESCURO).corFonte(CorEnum.BRANCO).aplicarNegrito();
+		planilha.noIntervalo("C12", "C15").mesclarCelulas().aplicarEstilos().corDeFundo(CorEnum.AZUL_CELESTE).aplicarItalico().aplicarTachado();
 //		planilha.manipularPlanilha().inserirColunaVaziaEntre("D", "E").logAlteracoes();
 //		planilha.manipularPlanilha().limparColuna("D").logAlteracoes();
-		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
+//		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
 
 		// PLANILHA SHEET2
 		planilha.criarSheet(sheet2);

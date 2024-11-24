@@ -306,5 +306,6 @@ public class Fontes {
 		return Color.decode(hexColor);
 	}
 
-	// Criar métodos para aplicar outros estilos dealinhamentos,quebra de texto, etc.
+	// Criar métodos para aplicar outros estilos dealinhamentos,quebra de texto,
+	// etc.
 }

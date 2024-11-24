@@ -30,19 +30,6 @@ public class BoldStyle {
 		this.styleCache = styleCache;
 	}
 
-	/**
-	 * Aplica negrito em uma célula específica, em uma linha inteira ou em um
-	 * intervalo de células.
-	 *
-	 * @param rowIndex         Índice da linha (-1 para não especificar).
-	 * @param columnIndex      Índice da coluna (-1 para não especificar).
-	 * @param startRowIndex    Índice da primeira linha do intervalo.
-	 * @param startColumnIndex Índice da primeira coluna do intervalo.
-	 * @param endRowIndex      Índice da última linha do intervalo.
-	 * @param endColumnIndex   Índice da última coluna do intervalo.
-	 * @param isRange          Se verdadeiro, aplica em um intervalo; caso
-	 *                         contrário, aplica em linha ou célula específica.
-	 */
 	public void aplicarNegrito(int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex, int endRowIndex,
 			int endColumnIndex, boolean isRange) {
 		if (isRange) {

@@ -32,4 +32,5 @@ public interface IManipulacaoDados {
 
 	IManipulacaoDados somarColunaComTexto(String posicaoInicial, String texto);
 
+	IManipulacaoDados mesclarCelulas();
 }

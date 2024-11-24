@@ -7,6 +7,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
+import com.abnote.planilhas.estilos.estilos.AlinhamentoStyle;
 import com.abnote.planilhas.estilos.estilos.BackGroundColor;
 import com.abnote.planilhas.estilos.estilos.BoldStyle;
 import com.abnote.planilhas.estilos.estilos.BorderStyleHelper;
@@ -41,6 +42,7 @@ public class EstiloCelula {
 	private final CenterStyle centerStyle;
 	private final Fontes fontes;
 	private final BackGroundColor backGroundColor;
+	private final AlinhamentoStyle alinhamentoStyle;
 
 	/**
 	 * Construtor para aplicar estilos na planilha inteira.
@@ -54,11 +56,6 @@ public class EstiloCelula {
 
 	/**
 	 * Construtor para aplicar estilos em uma célula específica.
-	 *
-	 * @param workbook    O Workbook que contém a planilha.
-	 * @param sheet       A Sheet onde os estilos serão aplicados.
-	 * @param rowIndex    Índice da linha da célula (-1 para não especificar).
-	 * @param columnIndex Índice da coluna da célula (-1 para não especificar).
 	 */
 	public EstiloCelula(Workbook workbook, Sheet sheet, int rowIndex, int columnIndex) {
 		this(workbook, sheet, rowIndex, columnIndex, -1, -1, -1, -1);
@@ -66,13 +63,6 @@ public class EstiloCelula {
 
 	/**
 	 * Construtor para aplicar estilos em um intervalo.
-	 *
-	 * @param workbook         O Workbook que contém a planilha.
-	 * @param sheet            A Sheet onde os estilos serão aplicados.
-	 * @param startRowIndex    Índice da primeira linha do intervalo.
-	 * @param startColumnIndex Índice da primeira coluna do intervalo.
-	 * @param endRowIndex      Índice da última linha do intervalo.
-	 * @param endColumnIndex   Índice da última coluna do intervalo.
 	 */
 	public EstiloCelula(Workbook workbook, Sheet sheet, int startRowIndex, int startColumnIndex, int endRowIndex,
 			int endColumnIndex) {
@@ -82,15 +72,6 @@ public class EstiloCelula {
 
 	/**
 	 * Construtor interno que inicializa todos os campos e as classes auxiliares.
-	 *
-	 * @param workbook         O Workbook que contém a planilha.
-	 * @param sheet            A Sheet onde os estilos serão aplicados.
-	 * @param rowIndex         Índice da linha da célula (-1 para não especificar).
-	 * @param columnIndex      Índice da coluna da célula (-1 para não especificar).
-	 * @param startRowIndex    Índice da primeira linha do intervalo.
-	 * @param startColumnIndex Índice da primeira coluna do intervalo.
-	 * @param endRowIndex      Índice da última linha do intervalo.
-	 * @param endColumnIndex   Índice da última coluna do intervalo.
 	 */
 	private EstiloCelula(Workbook workbook, Sheet sheet, int rowIndex, int columnIndex, int startRowIndex,
 			int startColumnIndex, int endRowIndex, int endColumnIndex) {
@@ -114,6 +95,7 @@ public class EstiloCelula {
 		this.centerStyle = new CenterStyle(workbook, sheet, styleCache);
 		this.fontes = new Fontes(workbook, sheet, styleCache);
 		this.backGroundColor = new BackGroundColor(workbook, sheet, styleCache);
+		this.alinhamentoStyle = new AlinhamentoStyle(workbook, sheet, styleCache);
 	}
 
 	/**
@@ -139,11 +121,29 @@ public class EstiloCelula {
 				isRange);
 		return this;
 	}
-	
-    public EstiloCelula aplicarTachado() {
-        fontes.aplicarTachado(rowIndex, columnIndex, startRowIndex, startColumnIndex,
-                             endRowIndex, endColumnIndex, isRange);
-        return this;
+
+	public EstiloCelula aplicarTachado() {
+		fontes.aplicarTachado(rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex,
+				isRange);
+		return this;
+	}
+
+	public EstiloCelula alinharAEsquerda() {
+		alinhamentoStyle.alinharAEsquerda(rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex,
+				endColumnIndex, isRange);
+		return this;
+	}
+
+	public EstiloCelula alinharADireita() {
+		alinhamentoStyle.alinharADireita(rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex,
+				endColumnIndex, isRange);
+		return this;
+	}
+
+	public EstiloCelula quebrarTexto() {
+		alinhamentoStyle.quebrarTexto(rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex,
+				endColumnIndex, isRange);
+		return this;
 	}
 
 	/**
