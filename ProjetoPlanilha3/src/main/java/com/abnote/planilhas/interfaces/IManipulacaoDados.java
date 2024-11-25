@@ -6,31 +6,29 @@ import com.abnote.planilhas.estilos.EstiloCelula;
 
 public interface IManipulacaoDados {
 
-	EstiloCelula aplicarEstilos();
+    IManipulacaoDados naCelula(String posicao);
 
-	EstiloCelula aplicarEstilosEmCelula();
+    IManipulacaoDados noIntervalo(String posicaoInicial, String posicaoFinal);
 
-	IManipulacaoDados naCelula(String posicao);
+    IManipulacaoDados inserirDados(Object dados, String delimitador);
 
-	IManipulacaoDados noIntervalo(String posicaoInicial, String posicaoFinal);
+    IManipulacaoDados inserirDados(String valor);
 
-	IManipulacaoDados inserirDados(Object dados, String delimitador);
+    IManipulacaoDados inserirDados(List<String> dados);
 
-	IManipulacaoDados inserirDados(String valor);
+    IManipulacaoDados inserirDados(List<String> dados, String delimitador);
 
-	IManipulacaoDados inserirDados(List<String> dados);
+    IManipulacaoDados inserirDadosArquivo(String caminhoArquivo, String delimitador);
 
-	IManipulacaoDados inserirDados(List<String> dados, String delimitador);
+    IManipulacaoDados converterEmNumero(String posicaoInicial);
 
-	IManipulacaoDados inserirDadosArquivo(String caminhoArquivo, String delimitador);
+    IManipulacaoDados converterEmContabil(String coluna);
 
-	IManipulacaoDados converterEmNumero(String posicaoInicial);
-
-	IManipulacaoDados converterEmContabil(String coluna);
-
-	IManipulacaoDados somarColuna(String posicaoInicial);
+    IManipulacaoDados somarColuna(String posicaoInicial);
 
 	IManipulacaoDados somarColunaComTexto(String posicaoInicial, String texto);
 
 	IManipulacaoDados mesclarCelulas();
+
+	EstiloCelula aplicarEstilos();
 }

@@ -1,19 +1,18 @@
 package com.abnote.planilhas.interfaces;
 
-import org.apache.poi.ss.usermodel.Cell;
-
 import com.abnote.planilhas.estilos.EstiloCelula;
 
 public interface IEstilos {
 
-	EstiloCelula centralizarTudo();
+    EstiloCelula aplicarEstilos();
 
-	EstiloCelula redimensionarColunas();
+    EstiloCelula centralizarTudo();
 
-	EstiloCelula removerLinhasDeGrade();
+    EstiloCelula redimensionarColunas();
 
-	EstiloCelula aplicarEstilosEmCelula();
+    EstiloCelula removerLinhasDeGrade();
 
-	EstiloCelula todasAsBordasEmTudo();
+    EstiloCelula aplicarEstilosEmCelula();
 
+    EstiloCelula todasAsBordasEmTudo();
 }

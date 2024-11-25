@@ -3,14 +3,17 @@ package com.abnote.planilhas.test;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.logging.*;
 
 import com.abnote.planilhas.estilos.estilos.CorEnum;
 import com.abnote.planilhas.estilos.estilos.FonteEnum;
 import com.abnote.planilhas.impl.PlanilhaXlsx;
 import com.abnote.planilhas.interfaces.IPlanilha;
+import com.abnote.planilhas.utils.LoggerUtil;
 
 public class TestePlanilha {
 	public static void main(String[] args) {
+		final Logger logger = LoggerUtil.getLogger(TestePlanilha.class);
 
 		IPlanilha planilha = new PlanilhaXlsx();
 		String sheet1 = "Dados Brasileiros";
@@ -31,15 +34,18 @@ public class TestePlanilha {
 		// PLANILHA SHEET1
 		planilha.criarPlanilha(sheet1);
 		planilha.SELECIONAR_SHEET(sheet1);
-		planilha.naCelula("B2").inserirDados(header, ",").aplicarEstilos().fonte(FonteEnum.TIMES_NEW_ROMAN)
-				.corFonte(CorEnum.LARANJA).fonteTamanho(14).corDeFundo(CorEnum.VERMELHO_ESCURO).aplicarNegrito();
+		planilha.naCelula("B2").inserirDados(header, ",");
+		planilha.aplicarEstilos().fonte(FonteEnum.TIMES_NEW_ROMAN).corFonte(CorEnum.LARANJA).fonteTamanho(14)
+				.corDeFundo(CorEnum.VERMELHO_ESCURO).aplicarNegrito();
+
 		planilha.naCelula("B3").inserirDados(listaDeArquivos, ";");
 		planilha.emTodaAPlanilha().aplicarEstilos().fonte("Segoe UI").fonteTamanho(14);
 		planilha.aplicarEstilos().aplicarBordasEspessasComInternas("B2", "J2");
-		planilha.naCelula("N11").inserirDados("TESTE").aplicarEstilosEmCelula().aplicarNegrito()
-				.corDeFundo(CorEnum.VERDE).corFonte(CorEnum.TURQUESA);
-		planilha.converterEmContabil("J3").somarColunaComTexto("J3", "VALOR TOTAL DA SOMA").aplicarEstilos()
-				.aplicarItalico().aplicarNegrito();
+		planilha.naCelula("N11").inserirDados("TESTE");
+		planilha.aplicarEstilosEmCelula().aplicarNegrito().corDeFundo(CorEnum.VERDE).corFonte(CorEnum.TURQUESA);
+
+		planilha.converterEmContabil("J3").somarColunaComTexto("J3", "VALOR TOTAL DA SOMA");
+		planilha.aplicarEstilos().aplicarItalico().aplicarNegrito();
 		planilha.aplicarEstilos().aplicarBordasEntre("L2", "L200");
 		planilha.noIntervalo("C4", "C17").aplicarEstilos().aplicarNegrito();
 		planilha.noIntervalo("C5", "G5").aplicarEstilos().fonte("Calibri").fonteTamanho(18).aplicarNegrito();
@@ -51,11 +57,13 @@ public class TestePlanilha {
 		planilha.noIntervalo("G15", "G20").aplicarEstilos().aplicarItalico().aplicarNegrito().alinharADireita();
 		planilha.noIntervalo("G18", "G22").aplicarEstilos().aplicarNegrito().aplicarSublinhado().alinharAEsquerda();
 		planilha.noIntervalo("F20", "H20").aplicarEstilos().aplicarTachado().aplicarNegrito();
-		planilha.noIntervalo("G4", "H4").mesclarCelulas().aplicarEstilos().corDeFundo(CorEnum.VERMELHO_ESCURO).corFonte(CorEnum.BRANCO).aplicarNegrito();
-		planilha.noIntervalo("C12", "C15").mesclarCelulas().aplicarEstilos().corDeFundo(CorEnum.AZUL_CELESTE).aplicarItalico().aplicarTachado();
+		planilha.noIntervalo("G4", "H4").mesclarCelulas();
+		planilha.aplicarEstilos().corDeFundo(CorEnum.VERMELHO_ESCURO).corFonte(CorEnum.BRANCO).aplicarNegrito();
+		planilha.noIntervalo("C12", "C15").mesclarCelulas();
+		planilha.aplicarEstilos().corDeFundo(CorEnum.AZUL_CELESTE).aplicarItalico().aplicarTachado();
 //		planilha.manipularPlanilha().inserirColunaVaziaEntre("D", "E").logAlteracoes();
 //		planilha.manipularPlanilha().limparColuna("D").logAlteracoes();
-//		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
+		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
 
 		// PLANILHA SHEET2
 		planilha.criarSheet(sheet2);
@@ -78,10 +86,18 @@ public class TestePlanilha {
 		planilha.converterEmNumero("L2").somarColuna("L2").aplicarEstilos().aplicarNegrito();
 		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
 
+//        logger.severe("Esta é uma mensagem SEVERE");
+//        logger.warning("Esta é uma mensagem WARNING");
+//        logger.info("Esta é uma mensagem INFO");
+//        logger.config("Esta é uma mensagem CONFIG");
+//        logger.fine("Esta é uma mensagem FINE");
+//        logger.finer("Esta é uma mensagem FINER");
+//        logger.finest("Esta é uma mensagem FINEST");
+
 		try {
 			planilha.salvar(caminhoArquivo);
 		} catch (IOException e) {
-			e.printStackTrace();
+			logger.severe("Erro ao salvar a planilha: " + e.getMessage());
 		}
 	}
 }

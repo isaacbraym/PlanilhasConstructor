@@ -2,75 +2,108 @@ package com.abnote.planilhas.impl;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
+import java.util.logging.*;
 
-import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
 
-import com.abnote.planilhas.calculos.Calculos;
-import com.abnote.planilhas.calculos.Conversores;
 import com.abnote.planilhas.estilos.EstiloCelula;
 import com.abnote.planilhas.interfaces.IPlanilha;
-import com.abnote.planilhas.interfaces.IPlanilhaBasica;
-import com.abnote.planilhas.interfaces.IManipulacaoDados;
-import com.abnote.planilhas.utils.InsersorDeDados;
+import com.abnote.planilhas.utils.LoggerUtil;
 import com.abnote.planilhas.utils.ManipuladorPlanilha;
-import com.abnote.planilhas.utils.PosicaoConverter;
 import com.abnote.planilhas.utils.PositionManager;
 
 public abstract class PlanilhaBase implements IPlanilha {
+	private static final Logger logger = LoggerUtil.getLogger(PlanilhaBase.class);
+
 	protected Workbook workbook;
 	protected Sheet sheet;
 	private final PositionManager positionManager = new PositionManager();
-	private InsersorDeDados insersorDeDados;
+	private DataManipulator dataManipulator;
+	private StyleManager styleManager;
 	private String diretorioSaida = "C:\\opt\\tmp\\testePlanilhaSaidas";
-
-	private int ultimoIndiceDeLinhaInserido = -1;
-	private int ultimoIndiceDeColunaInserido = -1;
 
 	protected abstract void inicializarWorkbook();
 
 	// Métodos de IPlanilhaBasica
 
+//	@Override
+//	public void criarPlanilha(String nomeSheet) {
+//		inicializarWorkbook();
+//		sheet = workbook.createSheet(nomeSheet);
+//		positionManager.resetarPosicao();
+//		dataManipulator = new DataManipulator(workbook, sheet, positionManager);
+//		styleManager = new StyleManager(workbook, sheet, positionManager, dataManipulator);
+//	}
 	@Override
 	public void criarPlanilha(String nomeSheet) {
-		inicializarWorkbook();
-		sheet = workbook.createSheet(nomeSheet);
-		insersorDeDados = new InsersorDeDados(sheet, positionManager);
-		positionManager.resetarPosicao();
+		logger.info("Iniciando a criação da planilha: " + nomeSheet);
+		try {
+			inicializarWorkbook();
+			sheet = workbook.createSheet(nomeSheet);
+			positionManager.resetarPosicao();
+			dataManipulator = new DataManipulator(workbook, sheet, positionManager);
+			styleManager = new StyleManager(workbook, sheet, positionManager, dataManipulator);
+			logger.info("Planilha '" + nomeSheet + "' criada com sucesso.");
+		} catch (Exception e) {
+			logger.severe("Erro ao criar a planilha '" + nomeSheet + "': " + e.getMessage());
+			throw e;
+		}
 	}
 
 	@Override
 	public void criarSheet(String nomeSheet) {
-		if (workbook.getSheet(nomeSheet) != null) {
-			throw new IllegalArgumentException("A aba '" + nomeSheet + "' já existe!");
+		try {
+			if (workbook.getSheet(nomeSheet) != null) {
+				String msg = "A aba '" + nomeSheet + "' já existe!";
+				logger.warning(msg);
+				throw new IllegalArgumentException(msg);
+			}
+			sheet = workbook.createSheet(nomeSheet);
+			positionManager.resetarPosicao();
+			dataManipulator = new DataManipulator(workbook, sheet, positionManager);
+			styleManager = new StyleManager(workbook, sheet, positionManager, dataManipulator);
+		} catch (Exception e) {
+			logger.severe("Erro ao criar a aba '" + nomeSheet + "': " + e.getMessage());
+			throw e;
 		}
-		sheet = workbook.createSheet(nomeSheet);
-		insersorDeDados = new InsersorDeDados(sheet, positionManager);
-		positionManager.resetarPosicao();
 	}
 
 	@Override
 	public void SELECIONAR_SHEET(String nomeSheet) {
-		if (workbook == null) {
-			throw new IllegalStateException("Workbook ainda não foi inicializado!");
+		logger.fine("Atuando na Sheet: " + nomeSheet);
+		try {
+			if (workbook == null) {
+				String msg = "Workbook ainda não foi inicializado!";
+				logger.severe(msg);
+				throw new IllegalStateException(msg);
+			}
+
+			sheet = workbook.getSheet(nomeSheet);
+
+			if (sheet == null) {
+				String msg = "A aba '" + nomeSheet + "' não foi encontrada.";
+				logger.warning(msg);
+				throw new IllegalArgumentException(msg);
+			}
+
+			positionManager.resetarPosicao();
+			dataManipulator = new DataManipulator(workbook, sheet, positionManager);
+			styleManager = new StyleManager(workbook, sheet, positionManager, dataManipulator);
+		} catch (Exception e) {
+			logger.severe("Erro ao selecionar a aba '" + nomeSheet + "': " + e.getMessage());
+			throw e;
 		}
-
-		sheet = workbook.getSheet(nomeSheet);
-
-		if (sheet == null) {
-			throw new IllegalArgumentException("A aba '" + nomeSheet + "' não foi encontrada.");
-		}
-
-		insersorDeDados = new InsersorDeDados(sheet, positionManager);
-		positionManager.resetarPosicao();
 	}
 
 	@Override
 	public void salvar(String nomeArquivo) throws IOException {
 		try (FileOutputStream arquivoSaida = new FileOutputStream(nomeArquivo)) {
 			workbook.write(arquivoSaida);
-			System.out.println("Planilha criada com sucesso em: " + nomeArquivo);
+			logger.info("Planilha salva com sucesso em: " + nomeArquivo);
+		} catch (IOException e) {
+			logger.severe("Erro ao salvar a planilha em '" + nomeArquivo + "': " + e.getMessage());
+			throw e;
 		}
 	}
 
@@ -90,29 +123,25 @@ public abstract class PlanilhaBase implements IPlanilha {
 	}
 
 	@Override
-	public IPlanilhaBasica emTodaAPlanilha() {
-		positionManager.emTodaAPlanilha();
-		return this;
+	public IPlanilha emTodaAPlanilha() {
+		try {
+			positionManager.emTodaAPlanilha();
+			return this;
+		} catch (Exception e) {
+			logger.severe("Erro ao aplicar operações em toda a planilha: " + e.getMessage());
+			throw e;
+		}
 	}
 
 	@Override
-	public IPlanilhaBasica ultimaLinha(String coluna) {
-		int[] posicao = PosicaoConverter.converterPosicao(coluna + "1");
-		int colunaIndex = posicao[0];
-
-		int ultimaLinha = -1;
-		for (int i = 0; i <= sheet.getLastRowNum(); i++) {
-			Row row = sheet.getRow(i);
-			if (row != null) {
-				Cell cell = row.getCell(colunaIndex);
-				if (cell != null && cell.getCellTypeEnum() != CellType.BLANK) {
-					ultimaLinha = i;
-				}
-			}
+	public IPlanilha ultimaLinha(String coluna) {
+		try {
+			dataManipulator.ultimaLinha(coluna);
+			return this;
+		} catch (Exception e) {
+			logger.severe("Erro ao encontrar a última linha na coluna '" + coluna + "': " + e.getMessage());
+			throw e;
 		}
-
-		ultimoIndiceDeLinhaInserido = (ultimaLinha >= 0) ? ultimaLinha : sheet.getLastRowNum();
-		return this;
 	}
 
 	@Override
@@ -120,168 +149,114 @@ public abstract class PlanilhaBase implements IPlanilha {
 		return new ManipuladorPlanilha(sheet);
 	}
 
-	// Métodos de IManipulacaoDados
+	// Métodos de IManipulacaoDados delegados para DataManipulator
 
 	@Override
-	public IManipulacaoDados naCelula(String posicao) {
-		positionManager.naCelula(posicao);
+	public IPlanilha naCelula(String posicao) {
+		dataManipulator.naCelula(posicao);
 		return this;
 	}
 
 	@Override
-	public IManipulacaoDados noIntervalo(String posicaoInicial, String posicaoFinal) {
-		positionManager.noIntervalo(posicaoInicial, posicaoFinal);
+	public IPlanilha noIntervalo(String posicaoInicial, String posicaoFinal) {
+		dataManipulator.noIntervalo(posicaoInicial, posicaoFinal);
 		return this;
 	}
 
 	@Override
-	public IManipulacaoDados inserirDados(Object dados, String delimitador) {
-		insersorDeDados.inserirDados(dados, delimitador);
-		updateLastInsertedIndices();
+	public IPlanilha inserirDados(Object dados, String delimitador) {
+		dataManipulator.inserirDados(dados, delimitador);
 		return this;
 	}
 
 	@Override
-	public IManipulacaoDados inserirDados(String valor) {
-		insersorDeDados.inserirDados(valor);
-		updateLastInsertedIndices();
+	public IPlanilha inserirDados(String valor) {
+		dataManipulator.inserirDados(valor);
 		return this;
 	}
 
 	@Override
-	public IManipulacaoDados inserirDados(List<String> dados) {
-		insersorDeDados.inserirDados(dados);
-		updateLastInsertedIndices();
+	public IPlanilha inserirDados(java.util.List<String> dados) {
+		dataManipulator.inserirDados(dados);
 		return this;
 	}
 
 	@Override
-	public IManipulacaoDados inserirDados(List<String> dados, String delimitador) {
-		insersorDeDados.inserirDados(dados, delimitador);
-		updateLastInsertedIndices();
+	public IPlanilha inserirDados(java.util.List<String> dados, String delimitador) {
+		dataManipulator.inserirDados(dados, delimitador);
+		return this;
+	}
+
+    @Override
+    public IPlanilha inserirDadosArquivo(String caminhoArquivo, String delimitador) {
+        try {
+            dataManipulator.inserirDadosArquivo(caminhoArquivo, delimitador);
+        } catch (Exception e) {
+            logger.severe("Erro ao inserir dados do arquivo '" + caminhoArquivo + "': " + e.getMessage());
+            throw e;
+        }
+        return this;
+    }
+
+	@Override
+	public IPlanilha converterEmNumero(String posicaoInicial) {
+		dataManipulator.converterEmNumero(posicaoInicial);
 		return this;
 	}
 
 	@Override
-	public IManipulacaoDados inserirDadosArquivo(String caminhoArquivo, String delimitador) {
-		insersorDeDados.inserirDadosArquivo(caminhoArquivo, delimitador);
-		updateLastInsertedIndices();
+	public IPlanilha converterEmContabil(String posicaoInicial) {
+		dataManipulator.converterEmContabil(posicaoInicial);
 		return this;
 	}
 
 	@Override
-	public IManipulacaoDados converterEmNumero(String posicaoInicial) {
-		Conversores.converterEmNumero(sheet, posicaoInicial);
+	public IPlanilha somarColuna(String posicaoInicial) {
+		dataManipulator.somarColuna(posicaoInicial);
 		return this;
 	}
 
 	@Override
-	public IManipulacaoDados converterEmContabil(String posicaoInicial) {
-		Conversores.converterEmContabil(sheet, posicaoInicial, workbook);
+	public IPlanilha somarColunaComTexto(String posicaoInicial, String texto) {
+		dataManipulator.somarColunaComTexto(posicaoInicial, texto);
 		return this;
 	}
 
 	@Override
-	public IManipulacaoDados somarColuna(String posicaoInicial) {
-		Calculos.somarColuna(sheet, posicaoInicial);
-		String colunaLetra = posicaoInicial.replaceAll("[0-9]", "");
-		this.ultimaLinha(colunaLetra);
-		ultimoIndiceDeColunaInserido = -1;
+	public IPlanilha mesclarCelulas() {
+		dataManipulator.mesclarCelulas();
 		return this;
 	}
 
-	@Override
-	public IManipulacaoDados somarColunaComTexto(String posicaoInicial, String texto) {
-		Calculos.somarColunaComTexto(sheet, posicaoInicial, texto);
-		String colunaLetra = posicaoInicial.replaceAll("[0-9]", "");
-		this.ultimaLinha(colunaLetra);
-		ultimoIndiceDeColunaInserido = -1;
-		return this;
-	}
-
-	@Override
-	public IManipulacaoDados mesclarCelulas() {
-		if (!positionManager.isIntervaloDefinida()) {
-			throw new IllegalStateException(
-					"É necessário definir um intervalo usando noIntervalo() antes de mesclar células.");
-		}
-
-		int startRow = positionManager.getPosicaoInicialLinha();
-		int endRow = positionManager.getPosicaoFinalLinha();
-		int startCol = positionManager.getPosicaoInicialColuna();
-		int endCol = positionManager.getPosicaoFinalColuna();
-
-		// Criar a região a ser mesclada
-		CellRangeAddress cellRangeAddress = new CellRangeAddress(startRow, endRow, startCol, endCol);
-
-		// Adicionar a região mesclada à planilha
-		sheet.addMergedRegion(cellRangeAddress);
-
-		// **Remover esta linha**
-		// positionManager.resetarPosicao();
-
-		return this;
-	}
-
-	/**
-	 * Atualiza os índices da última célula inserida.
-	 */
-	private void updateLastInsertedIndices() {
-		ultimoIndiceDeLinhaInserido = insersorDeDados.getUltimoIndiceDeLinhaInserido();
-		ultimoIndiceDeColunaInserido = insersorDeDados.getUltimoIndiceDeColunaInserido();
-	}
-
-	// Métodos de IEstilos
+	// Métodos de IEstilos delegados para StyleManager
 
 	@Override
 	public EstiloCelula aplicarEstilos() {
-	    EstiloCelula estilo;
-
-	    if (positionManager.isTodaPlanilhaDefinida()) {
-	        estilo = new EstiloCelula(workbook, sheet);
-	    } else if (positionManager.isIntervaloDefinida()) {
-	        estilo = new EstiloCelula(workbook, sheet, positionManager.getPosicaoInicialLinha(),
-	                positionManager.getPosicaoInicialColuna(), positionManager.getPosicaoFinalLinha(),
-	                positionManager.getPosicaoFinalColuna());
-	    } else if (ultimoIndiceDeLinhaInserido == -1) {
-	        estilo = new EstiloCelula(workbook, sheet, -1, -1);
-	    } else {
-	        estilo = new EstiloCelula(workbook, sheet, ultimoIndiceDeLinhaInserido, -1);
-	    }
-
-	    // **Resetar o positionManager aqui**
-	    positionManager.resetarPosicao();
-	    return estilo;
+		return styleManager.aplicarEstilos();
 	}
-
 
 	@Override
 	public EstiloCelula centralizarTudo() {
-		return aplicarEstilos().centralizarTudo();
+		return styleManager.centralizarTudo();
 	}
 
 	@Override
 	public EstiloCelula redimensionarColunas() {
-		return aplicarEstilos().redimensionarColunas();
+		return styleManager.redimensionarColunas();
 	}
 
 	@Override
 	public EstiloCelula removerLinhasDeGrade() {
-		return aplicarEstilos().removerLinhasDeGrade();
+		return styleManager.removerLinhasDeGrade();
 	}
 
 	@Override
 	public EstiloCelula aplicarEstilosEmCelula() {
-		if (ultimoIndiceDeLinhaInserido == -1 || ultimoIndiceDeColunaInserido == -1) {
-			return new EstiloCelula(workbook, sheet, -1, -1);
-		}
-		return new EstiloCelula(workbook, sheet, ultimoIndiceDeLinhaInserido, ultimoIndiceDeColunaInserido);
+		return styleManager.aplicarEstilosEmCelula();
 	}
 
 	@Override
 	public EstiloCelula todasAsBordasEmTudo() {
-		// Implementação real para aplicar bordas
-		aplicarEstilos().aplicarBordasEspessasComInternas("A1", "Z100");
-		return aplicarEstilos();
+		return styleManager.todasAsBordasEmTudo();
 	}
 }
