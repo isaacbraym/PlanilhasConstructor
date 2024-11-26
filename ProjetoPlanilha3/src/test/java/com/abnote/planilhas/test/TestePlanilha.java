@@ -61,7 +61,9 @@ public class TestePlanilha {
 		planilha.aplicarEstilos().corDeFundo(CorEnum.VERMELHO_ESCURO).corFonte(CorEnum.BRANCO).aplicarNegrito();
 		planilha.noIntervalo("C12", "C15").mesclarCelulas();
 		planilha.aplicarEstilos().corDeFundo(CorEnum.AZUL_CELESTE).aplicarItalico().aplicarTachado();
-//		planilha.manipularPlanilha().inserirColunaVaziaEntre("D", "E").logAlteracoes();
+		planilha.converterEmContabil("J3").multiplicarColunasComTexto("D", "I", 3, "Total multiplicação", "J").aplicarEstilos().redimensionarColuna();
+		planilha.ultimaLinha("I").aplicarEstilos().fonteTamanho(14).aplicarNegrito();
+		//		planilha.manipularPlanilha().inserirColunaVaziaEntre("D", "E").logAlteracoes();
 //		planilha.manipularPlanilha().limparColuna("D").logAlteracoes();
 		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
 

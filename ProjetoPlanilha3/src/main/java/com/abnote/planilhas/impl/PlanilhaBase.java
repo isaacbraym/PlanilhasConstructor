@@ -187,16 +187,16 @@ public abstract class PlanilhaBase implements IPlanilha {
 		return this;
 	}
 
-    @Override
-    public IPlanilha inserirDadosArquivo(String caminhoArquivo, String delimitador) {
-        try {
-            dataManipulator.inserirDadosArquivo(caminhoArquivo, delimitador);
-        } catch (Exception e) {
-            logger.severe("Erro ao inserir dados do arquivo '" + caminhoArquivo + "': " + e.getMessage());
-            throw e;
-        }
-        return this;
-    }
+	@Override
+	public IPlanilha inserirDadosArquivo(String caminhoArquivo, String delimitador) {
+		try {
+			dataManipulator.inserirDadosArquivo(caminhoArquivo, delimitador);
+		} catch (Exception e) {
+			logger.severe("Erro ao inserir dados do arquivo '" + caminhoArquivo + "': " + e.getMessage());
+			throw e;
+		}
+		return this;
+	}
 
 	@Override
 	public IPlanilha converterEmNumero(String posicaoInicial) {
@@ -219,6 +219,13 @@ public abstract class PlanilhaBase implements IPlanilha {
 	@Override
 	public IPlanilha somarColunaComTexto(String posicaoInicial, String texto) {
 		dataManipulator.somarColunaComTexto(posicaoInicial, texto);
+		return this;
+	}
+
+	@Override
+	public IPlanilha multiplicarColunasComTexto(String coluna1, String coluna2, int linhaInicial, String texto,
+			String colunaDestino) {
+		dataManipulator.multiplicarColunasComTexto(coluna1, coluna2, linhaInicial, texto, colunaDestino);
 		return this;
 	}
 

@@ -37,7 +37,7 @@ public class ManipuladorPlanilha {
 	 *
 	 * @param columnOffset O novo deslocamento a ser aplicado.
 	 */
-	public void setColumnOffset(int columnOffset) {
+	private void setColumnOffset(int columnOffset) {
 		this.columnOffset = columnOffset;
 		// Atualizar o helper com o novo offset
 		this.helper = new ManipuladorPlanilhaHelper(sheet, columnOffset);

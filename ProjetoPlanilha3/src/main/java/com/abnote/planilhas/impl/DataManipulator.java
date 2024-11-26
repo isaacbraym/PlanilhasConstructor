@@ -109,6 +109,15 @@ public class DataManipulator implements IManipulacaoDados {
 		ultimoIndiceDeColunaInserido = -1;
 		return this;
 	}
+	@Override
+	public IManipulacaoDados multiplicarColunasComTexto(String coluna1, String coluna2, int linhaInicial, String texto, String colunaDestino) {
+	    Calculos.multiplicarColunasComTexto(sheet, coluna1, coluna2, linhaInicial, texto, colunaDestino);
+	    String colunaLetra = colunaDestino;
+	    this.ultimaLinha(colunaLetra);
+	    ultimoIndiceDeColunaInserido = -1;
+	    return this;
+	}
+
 
 	@Override
 	public IManipulacaoDados mesclarCelulas() {

@@ -50,7 +50,7 @@ public class StyleManager implements IEstilos {
 
 	@Override
 	public EstiloCelula redimensionarColunas() {
-		return aplicarEstilos().redimensionarColunas();
+		return aplicarEstilos().redimensionarColuna();
 	}
 
 	@Override

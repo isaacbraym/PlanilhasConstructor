@@ -262,8 +262,8 @@ public class EstiloCelula {
 	 *
 	 * @return Instância atual de EstiloCelula para encadeamento de métodos.
 	 */
-	public EstiloCelula redimensionarColunas() {
-		centerStyle.redimensionarColunas();
+	public EstiloCelula redimensionarColuna() {
+		centerStyle.redimensionarColuna();
 		return this;
 	}
 
