@@ -109,15 +109,16 @@ public class DataManipulator implements IManipulacaoDados {
 		ultimoIndiceDeColunaInserido = -1;
 		return this;
 	}
-	@Override
-	public IManipulacaoDados multiplicarColunasComTexto(String coluna1, String coluna2, int linhaInicial, String texto, String colunaDestino) {
-	    Calculos.multiplicarColunasComTexto(sheet, coluna1, coluna2, linhaInicial, texto, colunaDestino);
-	    String colunaLetra = colunaDestino;
-	    this.ultimaLinha(colunaLetra);
-	    ultimoIndiceDeColunaInserido = -1;
-	    return this;
-	}
 
+	@Override
+	public IManipulacaoDados multiplicarColunasComTexto(String coluna1, String coluna2, int linhaInicial, String texto,
+			String colunaDestino) {
+		Calculos.multiplicarColunasComTexto(sheet, coluna1, coluna2, linhaInicial, texto, colunaDestino);
+		String colunaLetra = colunaDestino;
+		this.ultimaLinha(colunaLetra);
+		ultimoIndiceDeColunaInserido = -1;
+		return this;
+	}
 
 	@Override
 	public IManipulacaoDados mesclarCelulas() {
@@ -141,23 +142,6 @@ public class DataManipulator implements IManipulacaoDados {
 		return this;
 	}
 
-//	public void ultimaLinha(String coluna) {
-//		int[] posicao = PosicaoConverter.converterPosicao(coluna + "1");
-//		int colunaIndex = posicao[0];
-//
-//		int ultimaLinha = -1;
-//		for (int i = 0; i <= sheet.getLastRowNum(); i++) {
-//			org.apache.poi.ss.usermodel.Row row = sheet.getRow(i);
-//			if (row != null) {
-//				org.apache.poi.ss.usermodel.Cell cell = row.getCell(colunaIndex);
-//				if (cell != null && cell.getCellTypeEnum() != org.apache.poi.ss.usermodel.CellType.BLANK) {
-//					ultimaLinha = i;
-//				}
-//			}
-//		}
-//
-//		ultimoIndiceDeLinhaInserido = (ultimaLinha >= 0) ? ultimaLinha : sheet.getLastRowNum();
-//	}
 	public void ultimaLinha(String coluna) {
 		int colunaIndex = PosicaoConverter.converterColuna(coluna);
 		ultimoIndiceDeLinhaInserido = IntStream.rangeClosed(0, sheet.getLastRowNum()).filter(i -> {
@@ -165,6 +149,54 @@ public class DataManipulator implements IManipulacaoDados {
 			return row != null && row.getCell(colunaIndex) != null
 					&& row.getCell(colunaIndex).getCellTypeEnum() != CellType.BLANK;
 		}).max().orElse(sheet.getLastRowNum());
+	}
+
+	@Override
+	public IManipulacaoDados naUltimaLinha(String coluna) {
+		int colunaIndex = PosicaoConverter.converterColuna(coluna);
+		int lastRowIndex = IntStream.rangeClosed(0, sheet.getLastRowNum()).filter(i -> {
+			Row row = sheet.getRow(i);
+			return row != null && row.getCell(colunaIndex) != null
+					&& row.getCell(colunaIndex).getCellTypeEnum() != CellType.BLANK;
+		}).max().orElse(-1);
+		int nextRowIndex = lastRowIndex + 1;
+		String colunaLetra = converterNumeroParaColuna(colunaIndex);
+		String posicao = colunaLetra + (nextRowIndex + 1);
+		positionManager.naCelula(posicao);
+
+		return this;
+	}
+
+	// Método auxiliar para converter o índice da coluna em letra da coluna
+	private String converterNumeroParaColuna(int colunaIndex) {
+		StringBuilder colunaLetra = new StringBuilder();
+		while (colunaIndex >= 0) {
+			int remainder = colunaIndex % 26;
+			colunaLetra.insert(0, (char) (remainder + 'A'));
+			colunaIndex = (colunaIndex / 26) - 1;
+		}
+		return colunaLetra.toString();
+	}
+
+	@Override
+	public IManipulacaoDados inserir(String valor) {
+		insersorDeDados.inserirDados(valor);
+		updateLastInsertedIndices();
+		return this;
+	}
+
+	@Override
+	public IManipulacaoDados inserir(int valor) {
+		insersorDeDados.inserirDados(String.valueOf(valor));
+		updateLastInsertedIndices();
+		return this;
+	}
+
+	@Override
+	public IManipulacaoDados inserir(double valor) {
+		insersorDeDados.inserirDados(String.valueOf(valor));
+		updateLastInsertedIndices();
+		return this;
 	}
 
 	private void updateLastInsertedIndices() {
@@ -182,7 +214,12 @@ public class DataManipulator implements IManipulacaoDados {
 
 	@Override
 	public EstiloCelula aplicarEstilos() {
-		// TODO Auto-generated method stub
-		return null;
+		int rowIndex = getUltimoIndiceDeLinhaInserido();
+		int columnIndex = getUltimoIndiceDeColunaInserido();
+		if (rowIndex >= 0 && columnIndex >= 0) {
+			return new EstiloCelula(workbook, sheet, rowIndex, columnIndex);
+		} else {
+			throw new IllegalStateException("Nenhuma célula disponível para aplicar estilos.");
+		}
 	}
 }

@@ -18,5 +18,23 @@ public class PlanilhaXlsx extends PlanilhaBase {
         return super.todasAsBordasEmTudo();
     }
 
+	@Override
+	public IManipulacaoDados inserir(String valor) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IManipulacaoDados inserir(int valor) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public IManipulacaoDados inserir(double valor) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
     // Caso haja métodos específicos para .xlsx, eles podem ser implementados aqui
 }

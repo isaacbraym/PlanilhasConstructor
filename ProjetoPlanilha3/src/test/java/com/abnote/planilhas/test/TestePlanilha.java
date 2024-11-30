@@ -65,13 +65,18 @@ public class TestePlanilha {
 		planilha.ultimaLinha("I").aplicarEstilos().fonteTamanho(14).aplicarNegrito();
 		//		planilha.manipularPlanilha().inserirColunaVaziaEntre("D", "E").logAlteracoes();
 //		planilha.manipularPlanilha().limparColuna("D").logAlteracoes();
+		System.out.println("TOTAL DE COLUNAS na linha 11: " + planilha.getNumeroDeColunasNaLinha(11));
+		System.out.println("TOTAL DE LINHAS EM B: " + planilha.getNumeroDeLinhas("B"));
+		int totLinhas = planilha.getNumeroDeLinhas("B") - 1;
+		System.out.println("total de linhas para cálculo " + totLinhas);
+		planilha.naUltimaLinha("E").inserir("TESTEE").aplicarEstilos().aplicarNegrito().fonteTamanho(14).corDeFundo(CorEnum.LARANJA);
 		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
 
 		// PLANILHA SHEET2
 		planilha.criarSheet(sheet2);
 		planilha.SELECIONAR_SHEET(sheet2);
 		planilha.naCelula("C3").inserirDados(listaDeArquivos, ";");
-		planilha.ultimaLinha("J").aplicarEstilos().aplicarNegrito().fonte("Arial").fonteTamanho(14);
+		planilha.ultimaLinha("J").aplicarEstilos().aplicarNegrito().fonte("Arial").fonteTamanho(14); 
 		planilha.noIntervalo("C4", "C17").aplicarEstilos().fonte("Another Danger - Demo").fonteTamanho(12)
 				.corDeFundo(CorEnum.AMARELO).aplicarNegrito();
 		planilha.noIntervalo("C4", "F4").aplicarEstilos().fonte(FonteEnum.VERDANA).fonteTamanho(21)

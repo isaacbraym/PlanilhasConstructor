@@ -32,6 +32,12 @@ public interface IManipulacaoDados {
 			String colunaDestino);
 
 	IManipulacaoDados mesclarCelulas();
+	
+    IManipulacaoDados inserir(String valor);
+    IManipulacaoDados inserir(int valor);
+    IManipulacaoDados inserir(double valor);
 
 	EstiloCelula aplicarEstilos();
+
+	IManipulacaoDados naUltimaLinha(String coluna);
 }
