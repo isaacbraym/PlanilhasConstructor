@@ -31,7 +31,7 @@ public class InsersorDeDados {
 		celula.setCellValue(valor);
 
 		atualizarIndicesInseridos(positionManager.getPosicaoInicialLinha(), positionManager.getPosicaoInicialColuna());
-//		positionManager.resetarPosicao(); //VER
+//		positionManager.resetarPosicao();
 	}
 
 	public void inserirDados(Object dados, String delimitador) {

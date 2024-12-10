@@ -9,6 +9,7 @@ import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
 
 import com.abnote.planilhas.estilos.EstiloCelula;
 import com.abnote.planilhas.interfaces.IManipulacaoDados;
@@ -148,22 +149,21 @@ public abstract class PlanilhaBase implements IPlanilha {
 
 	@Override
 	public int getNumeroDeColunasNaLinha(int linha) {
-	    int linhaIndex = linha - 1;
-	    Row row = sheet.getRow(linhaIndex);
-	    if (row == null) {
-	        return 0;
-	    }
-	    int numCols = 0;
-	    short lastCellNum = row.getLastCellNum();
-	    for (int i = 0; i < lastCellNum; i++) {
-	        Cell cell = row.getCell(i);
-	        if (cell != null && cell.getCellTypeEnum() != CellType.BLANK) {
-	            numCols++;
-	        }
-	    }
-	    return numCols;
+		int linhaIndex = linha - 1;
+		Row row = sheet.getRow(linhaIndex);
+		if (row == null) {
+			return 0;
+		}
+		int numCols = 0;
+		short lastCellNum = row.getLastCellNum();
+		for (int i = 0; i < lastCellNum; i++) {
+			Cell cell = row.getCell(i);
+			if (cell != null && cell.getCellTypeEnum() != CellType.BLANK) {
+				numCols++;
+			}
+		}
+		return numCols;
 	}
-
 
 	@Override
 	public IPlanilha ultimaLinha(String coluna) {
@@ -175,15 +175,16 @@ public abstract class PlanilhaBase implements IPlanilha {
 			throw e;
 		}
 	}
+
 	@Override
 	public IManipulacaoDados naUltimaLinha(String coluna) {
-	    try {
-	        dataManipulator.naUltimaLinha(coluna);
-	        return dataManipulator;
-	    } catch (Exception e) {
-	        logger.severe("Erro ao encontrar a última linha na coluna '" + coluna + "': " + e.getMessage());
-	        throw e;
-	    }
+		try {
+			dataManipulator.naUltimaLinha(coluna);
+			return dataManipulator;
+		} catch (Exception e) {
+			logger.severe("Erro ao encontrar a última linha na coluna '" + coluna + "': " + e.getMessage());
+			throw e;
+		}
 	}
 
 	@Override
@@ -277,6 +278,81 @@ public abstract class PlanilhaBase implements IPlanilha {
 		return this;
 	}
 
+	@Override
+	public IPlanilha inserirFiltros() {
+		try {
+			if (sheet == null) {
+				throw new IllegalStateException(
+						"Sheet não foi inicializada. Crie ou selecione uma planilha antes de inserir filtros.");
+			}
+
+			Row headerRow = encontrarLinhaDeCabecalho(sheet);
+			if (headerRow != null) {
+				int headerRowIndex = headerRow.getRowNum();
+
+				// Encontrar a primeira e a última coluna não-vazia na linha de cabeçalho
+				int firstColumn = -1;
+				int lastColumn = -1;
+				short lastCellNum = headerRow.getLastCellNum();
+
+				for (int c = 0; c < lastCellNum; c++) {
+					Cell cell = headerRow.getCell(c);
+					if (cell != null && cell.getCellTypeEnum() != CellType.BLANK && !cell.toString().trim().isEmpty()) {
+						if (firstColumn == -1) {
+							firstColumn = c;
+						}
+						lastColumn = c;
+					}
+				}
+
+				if (firstColumn != -1 && lastColumn != -1 && lastColumn >= firstColumn) {
+					// Aplica o filtro somente sobre a faixa de colunas identificadas
+					CellRangeAddress range = new CellRangeAddress(headerRowIndex, headerRowIndex, firstColumn,
+							lastColumn);
+					sheet.setAutoFilter(range);
+					logger.info("Filtros aplicados na linha de cabeçalho: " + (headerRowIndex + 1) + ", colunas: "
+							+ (firstColumn + 1) + " até " + (lastColumn + 1));
+				} else {
+					logger.warning("Não foi possível identificar colunas para aplicar filtros.");
+				}
+			} else {
+				logger.warning("Não foi encontrada uma linha de cabeçalho para aplicar filtros.");
+			}
+		} catch (Exception e) {
+			logger.severe("Erro ao inserir filtros: " + e.getMessage());
+			throw e;
+		}
+
+		return this;
+	}
+
+	/**
+	 * Método auxiliar para encontrar a primeira linha que contenha conteúdo não
+	 * vazio. Esta será considerada a linha de cabeçalho.
+	 *
+	 * Critério simples: a primeira linha do topo para baixo que tiver pelo menos
+	 * uma célula não vazia. Você pode ajustar este critério conforme a necessidade.
+	 */
+	private Row encontrarLinhaDeCabecalho(Sheet sheet) {
+		for (int i = sheet.getFirstRowNum(); i <= sheet.getLastRowNum(); i++) {
+			Row row = sheet.getRow(i);
+			if (row != null && row.getLastCellNum() > 0) {
+				// Verifica se existe pelo menos uma célula não vazia
+				boolean linhaTemConteudo = false;
+				for (int c = 0; c < row.getLastCellNum(); c++) {
+					Cell cell = row.getCell(c);
+					if (cell != null && cell.getCellTypeEnum() != CellType.BLANK && !cell.toString().trim().isEmpty()) {
+						linhaTemConteudo = true;
+						break;
+					}
+				}
+				if (linhaTemConteudo) {
+					return row;
+				}
+			}
+		}
+		return null;
+	}
 	// Métodos de IEstilos delegados para StyleManager
 
 	@Override

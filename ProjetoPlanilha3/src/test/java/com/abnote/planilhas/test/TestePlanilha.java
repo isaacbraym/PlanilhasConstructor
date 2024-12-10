@@ -61,22 +61,25 @@ public class TestePlanilha {
 		planilha.aplicarEstilos().corDeFundo(CorEnum.VERMELHO_ESCURO).corFonte(CorEnum.BRANCO).aplicarNegrito();
 		planilha.noIntervalo("C12", "C15").mesclarCelulas();
 		planilha.aplicarEstilos().corDeFundo(CorEnum.AZUL_CELESTE).aplicarItalico().aplicarTachado();
-		planilha.converterEmContabil("J3").multiplicarColunasComTexto("D", "I", 3, "Total multiplicação", "J").aplicarEstilos().redimensionarColuna();
+		planilha.converterEmContabil("J3").multiplicarColunasComTexto("D", "I", 3, "Total multiplicação", "J")
+				.aplicarEstilos().redimensionarColuna();
 		planilha.ultimaLinha("I").aplicarEstilos().fonteTamanho(14).aplicarNegrito();
-		//		planilha.manipularPlanilha().inserirColunaVaziaEntre("D", "E").logAlteracoes();
+		// planilha.manipularPlanilha().inserirColunaVaziaEntre("D",
+		// "E").logAlteracoes();
 //		planilha.manipularPlanilha().limparColuna("D").logAlteracoes();
 		System.out.println("TOTAL DE COLUNAS na linha 11: " + planilha.getNumeroDeColunasNaLinha(11));
 		System.out.println("TOTAL DE LINHAS EM B: " + planilha.getNumeroDeLinhas("B"));
 		int totLinhas = planilha.getNumeroDeLinhas("B") - 1;
 		System.out.println("total de linhas para cálculo " + totLinhas);
-		planilha.naUltimaLinha("E").inserir("TESTEE").aplicarEstilos().aplicarNegrito().fonteTamanho(14).corDeFundo(CorEnum.LARANJA);
+		planilha.naUltimaLinha("E").inserir("TESTEE").aplicarEstilos().aplicarNegrito().fonteTamanho(14)
+				.corDeFundo(CorEnum.LARANJA);
 		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
-
+		planilha.inserirFiltros();
 		// PLANILHA SHEET2
 		planilha.criarSheet(sheet2);
 		planilha.SELECIONAR_SHEET(sheet2);
 		planilha.naCelula("C3").inserirDados(listaDeArquivos, ";");
-		planilha.ultimaLinha("J").aplicarEstilos().aplicarNegrito().fonte("Arial").fonteTamanho(14); 
+		planilha.ultimaLinha("J").aplicarEstilos().aplicarNegrito().fonte("Arial").fonteTamanho(14);
 		planilha.noIntervalo("C4", "C17").aplicarEstilos().fonte("Another Danger - Demo").fonteTamanho(12)
 				.corDeFundo(CorEnum.AMARELO).aplicarNegrito();
 		planilha.noIntervalo("C4", "F4").aplicarEstilos().fonte(FonteEnum.VERDANA).fonteTamanho(21)
@@ -84,6 +87,7 @@ public class TestePlanilha {
 		planilha.noIntervalo("D11", "G11").aplicarEstilos().corFonte(CorEnum.BEGE).corDeFundo(90, 50, 128)
 				.aplicarNegrito();
 		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
+		planilha.inserirFiltros();
 
 		// PLANILHA SHEET3
 		planilha.criarSheet(sheet3);
@@ -92,6 +96,7 @@ public class TestePlanilha {
 		planilha.converterEmNumero("K2").somarColunaComTexto("K2", "Totais:");
 		planilha.converterEmNumero("L2").somarColuna("L2").aplicarEstilos().aplicarNegrito();
 		planilha.aplicarEstilos().removerLinhasDeGrade().centralizarERedimensionarTudo().aplicarTodasAsBordas();
+		planilha.inserirFiltros();
 
 //        logger.severe("Esta é uma mensagem SEVERE");
 //        logger.warning("Esta é uma mensagem WARNING");

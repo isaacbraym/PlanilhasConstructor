@@ -4,6 +4,7 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 import com.abnote.planilhas.estilos.EstiloCelula;
 import com.abnote.planilhas.interfaces.IManipulacaoDados;
+import com.abnote.planilhas.interfaces.IPlanilha;
 
 public class PlanilhaXlsx extends PlanilhaBase {
 
