@@ -46,7 +46,7 @@ public class ManipuladorPlanilhaHelper {
 	}
 
 	/**
-	 * Limpa os dados de uma coluna específica sem remover ou deslocar a coluna.
+	 * Limpa os dados de uma célula de uma coluna específica, sem remover a coluna.
 	 *
 	 * @param colIndex Índice da coluna a ser limpa.
 	 */
@@ -56,7 +56,6 @@ public class ManipuladorPlanilhaHelper {
 			Row row = sheet.getRow(rowNum);
 			if (row == null)
 				continue;
-
 			Cell celula = row.getCell(colIndex + columnOffset);
 			if (celula != null) {
 				celula.setCellType(CellType.BLANK);
@@ -65,15 +64,14 @@ public class ManipuladorPlanilhaHelper {
 	}
 
 	/**
-	 * Obtém o valor de uma célula como String de forma estática.
+	 * Retorna o valor de uma célula como String.
 	 *
-	 * @param cell A célula cujo valor será obtido.
-	 * @return O valor da célula como String ou null se a célula for nula ou vazia.
+	 * @param cell A célula.
+	 * @return O valor da célula ou null.
 	 */
 	public static String obterValorCelulaComoString(Cell cell) {
 		if (cell == null)
 			return null;
-
 		CellType tipoCelula = cell.getCellTypeEnum();
 		switch (tipoCelula) {
 		case STRING:
@@ -104,20 +102,19 @@ public class ManipuladorPlanilhaHelper {
 				maxColunas = row.getLastCellNum();
 			}
 		}
-		return maxColunas - columnOffset - 1; // Ajuste pelo deslocamento e 1-based
+		return maxColunas - columnOffset - 1;
 	}
 
 	/**
 	 * Obtém um mapa que relaciona os índices das colunas com os nomes dos
 	 * cabeçalhos.
 	 *
-	 * @return Mapa de índices de coluna para nomes de cabeçalhos.
+	 * @return Mapa de índices para nomes.
 	 */
 	public Map<Integer, String> obterMapaDeCabecalhos() {
 		Map<Integer, String> mapaCabecalhos = new HashMap<>();
 		int ultimaLinha = sheet.getLastRowNum();
 		int ultimaColuna = obterNumeroUltimaColuna();
-
 		for (int colIndex = 0; colIndex <= ultimaColuna; colIndex++) {
 			String nomeCabecalho = encontrarCabecalho(colIndex, ultimaLinha);
 			if (nomeCabecalho != null) {
@@ -127,13 +124,18 @@ public class ManipuladorPlanilhaHelper {
 		return mapaCabecalhos;
 	}
 
-	// Método privado para encontrar o cabeçalho de uma coluna específica.
+	/**
+	 * Encontra o cabeçalho de uma coluna específica.
+	 *
+	 * @param colIndex    Índice da coluna.
+	 * @param ultimaLinha Última linha da planilha.
+	 * @return O nome do cabeçalho ou null.
+	 */
 	private String encontrarCabecalho(int colIndex, int ultimaLinha) {
 		for (int rowNum = 0; rowNum <= ultimaLinha; rowNum++) {
 			Row row = sheet.getRow(rowNum);
 			if (row == null)
 				continue;
-
 			Cell celula = row.getCell(colIndex + columnOffset);
 			String valorCelula = obterValorCelulaComoString(celula);
 			if (valorCelula != null && !valorCelula.trim().isEmpty()) {
@@ -148,8 +150,8 @@ public class ManipuladorPlanilhaHelper {
 	 *
 	 * @param indiceEsquerda Índice da coluna à esquerda.
 	 * @param indiceDireita  Índice da coluna à direita.
-	 * @param colunaEsquerda Nome da coluna à esquerda (para mensagem de erro).
-	 * @param colunaDireita  Nome da coluna à direita (para mensagem de erro).
+	 * @param colunaEsquerda Nome da coluna à esquerda.
+	 * @param colunaDireita  Nome da coluna à direita.
 	 * @throws IllegalArgumentException se as colunas não forem adjacentes.
 	 */
 	public void validarAdjacencia(int indiceEsquerda, int indiceDireita, String colunaEsquerda, String colunaDireita) {
@@ -161,9 +163,9 @@ public class ManipuladorPlanilhaHelper {
 	}
 
 	/**
-	 * Define a largura da nova coluna na posição especificada.
+	 * Define a largura da nova coluna na posição de inserção.
 	 *
-	 * @param posicaoInsercao Índice da posição de inserção da nova coluna.
+	 * @param posicaoInsercao Índice de inserção.
 	 */
 	public void definirLarguraNovaColuna(int posicaoInsercao) {
 		sheet.setColumnWidth(posicaoInsercao + columnOffset, sheet.getDefaultColumnWidth() * 256);
@@ -174,8 +176,8 @@ public class ManipuladorPlanilhaHelper {
 	 *
 	 * @param colunaOrigem   Índice da coluna de origem.
 	 * @param colunaDestino  Índice da coluna de destino.
-	 * @param mapaCabecalhos Mapa de índices de coluna para nomes de cabeçalhos.
-	 * @param logAcoes       Log de ações para registrar as movimentações.
+	 * @param mapaCabecalhos Mapa de cabeçalhos.
+	 * @param logAcoes       Objeto de log para registrar a ação.
 	 */
 	public void registrarColunasDeslocadas(int colunaOrigem, int colunaDestino, Map<Integer, String> mapaCabecalhos,
 			LogsDeModificadores.ActionLog logAcoes) {
@@ -195,8 +197,8 @@ public class ManipuladorPlanilhaHelper {
 	 *
 	 * @param indiceColuna   Índice da coluna removida.
 	 * @param ultimaColuna   Índice da última coluna.
-	 * @param mapaCabecalhos Mapa de índices de coluna para nomes de cabeçalhos.
-	 * @param logAcoes       Log de ações para registrar as movimentações.
+	 * @param mapaCabecalhos Mapa de cabeçalhos.
+	 * @param logAcoes       Objeto de log para registrar a ação.
 	 */
 	public void registrarColunasDeslocadasRemocao(int indiceColuna, int ultimaColuna,
 			Map<Integer, String> mapaCabecalhos, LogsDeModificadores.ActionLog logAcoes) {
@@ -208,10 +210,10 @@ public class ManipuladorPlanilhaHelper {
 	/**
 	 * Registra as colunas deslocadas após a inserção de uma coluna.
 	 *
-	 * @param posicaoInsercao Índice da posição de inserção.
+	 * @param posicaoInsercao Índice de inserção.
 	 * @param ultimaColuna    Índice da última coluna.
-	 * @param mapaCabecalhos  Mapa de índices de coluna para nomes de cabeçalhos.
-	 * @param logAcoes        Log de ações para registrar as movimentações.
+	 * @param mapaCabecalhos  Mapa de cabeçalhos.
+	 * @param logAcoes        Objeto de log para registrar a ação.
 	 */
 	public void registrarColunasDeslocadasInsercao(int posicaoInsercao, int ultimaColuna,
 			Map<Integer, String> mapaCabecalhos, LogsDeModificadores.ActionLog logAcoes) {
@@ -220,7 +222,14 @@ public class ManipuladorPlanilhaHelper {
 		}
 	}
 
-	// Método privado para adicionar uma movimentação de coluna ao log.
+	/**
+	 * Adiciona uma movimentação de coluna ao log.
+	 *
+	 * @param colunaAtual    Índice atual da coluna.
+	 * @param colunaAlvo     Novo índice da coluna.
+	 * @param mapaCabecalhos Mapa de cabeçalhos.
+	 * @param logAcoes       Objeto de log.
+	 */
 	private void adicionarMovimentacaoColuna(int colunaAtual, int colunaAlvo, Map<Integer, String> mapaCabecalhos,
 			LogsDeModificadores.ActionLog logAcoes) {
 		String nomeCabecalho = mapaCabecalhos.get(colunaAtual);
@@ -235,7 +244,7 @@ public class ManipuladorPlanilhaHelper {
 	/**
 	 * Remove todas as células de uma coluna específica.
 	 *
-	 * @param colIndex Índice da coluna cujas células serão removidas.
+	 * @param colIndex Índice da coluna.
 	 */
 	public void removerCelulasDaColuna(int colIndex) {
 		int ultimaLinha = sheet.getLastRowNum();
@@ -243,66 +252,65 @@ public class ManipuladorPlanilhaHelper {
 			Row row = sheet.getRow(rowNum);
 			if (row == null)
 				continue;
-
-			Cell celulaRemover = row.getCell(colIndex + columnOffset);
-			if (celulaRemover != null) {
-				row.removeCell(celulaRemover);
+			Cell celula = row.getCell(colIndex + columnOffset);
+			if (celula != null) {
+				row.removeCell(celula);
 			}
 		}
 	}
 
 	/**
-	 * Copia uma coluna para uma estrutura temporária.
+	 * Copia uma coluna para um mapa temporário.
 	 *
 	 * @param colunaOrigem Índice da coluna a ser copiada.
-	 * @return Mapa com os dados das células copiadas.
+	 * @return Mapa com os dados da coluna.
 	 */
 	public Map<Integer, CellData> copiarColuna(int colunaOrigem) {
-		Map<Integer, CellData> colunaTemporaria = new HashMap<>();
+		Map<Integer, CellData> colunaTemp = new HashMap<>();
 		int ultimaLinha = sheet.getLastRowNum();
-
 		for (int i = 0; i <= ultimaLinha; i++) {
 			Row row = sheet.getRow(i);
 			if (row == null)
 				continue;
-
 			Cell celulaOrigem = row.getCell(colunaOrigem + columnOffset);
 			if (celulaOrigem != null) {
 				CellData dadosCelula = new CellData();
 				copiarDadosCelula(celulaOrigem, dadosCelula);
-				colunaTemporaria.put(i, dadosCelula);
+				colunaTemp.put(i, dadosCelula);
 				row.removeCell(celulaOrigem);
 			}
 		}
-		return colunaTemporaria;
+		return colunaTemp;
 	}
 
 	/**
-	 * Cola os dados de uma coluna temporária em uma posição especificada.
+	 * Cola os dados de uma coluna temporária em uma coluna de destino.
 	 *
 	 * @param colunaDestino    Índice da coluna de destino.
-	 * @param colunaTemporaria Mapa com os dados das células temporárias.
+	 * @param colunaTemporaria Mapa com os dados temporários.
 	 */
 	public void colarColunaTemporaria(int colunaDestino, Map<Integer, CellData> colunaTemporaria) {
 		for (Map.Entry<Integer, CellData> entrada : colunaTemporaria.entrySet()) {
 			int rowNum = entrada.getKey();
 			CellData dadosCelula = entrada.getValue();
-
 			Row row = sheet.getRow(rowNum);
 			if (row == null) {
 				row = sheet.createRow(rowNum);
 			}
-
 			Cell celulaDestino = row.createCell(colunaDestino + columnOffset);
 			colarDadosCelula(celulaDestino, dadosCelula);
 		}
 	}
 
-	// Método privado para copiar os dados de uma célula para um objeto CellData.
+	/**
+	 * Copia os dados de uma célula para um objeto CellData.
+	 *
+	 * @param celulaOrigem A célula de origem.
+	 * @param dadosCelula  Objeto para armazenar os dados.
+	 */
 	private void copiarDadosCelula(Cell celulaOrigem, CellData dadosCelula) {
 		dadosCelula.setCellType(celulaOrigem.getCellTypeEnum());
 		dadosCelula.setCellStyle(celulaOrigem.getCellStyle());
-
 		switch (celulaOrigem.getCellTypeEnum()) {
 		case STRING:
 			dadosCelula.setStringValue(celulaOrigem.getStringCellValue());
@@ -320,19 +328,21 @@ public class ManipuladorPlanilhaHelper {
 			dadosCelula.setErrorValue(celulaOrigem.getErrorCellValue());
 			break;
 		case BLANK:
-			// Nada a fazer para células em branco
 			break;
 		default:
-			// Outros tipos de célula, se necessário
 			break;
 		}
 	}
 
-	// Método privado para colar os dados de um objeto CellData em uma célula.
+	/**
+	 * Cola os dados de um objeto CellData em uma célula.
+	 *
+	 * @param celulaDestino A célula de destino.
+	 * @param dadosCelula   Objeto com os dados.
+	 */
 	private void colarDadosCelula(Cell celulaDestino, CellData dadosCelula) {
 		celulaDestino.setCellType(dadosCelula.getCellType());
 		celulaDestino.setCellStyle(dadosCelula.getCellStyle());
-
 		switch (dadosCelula.getCellType()) {
 		case STRING:
 			celulaDestino.setCellValue(dadosCelula.getStringValue());
@@ -350,19 +360,17 @@ public class ManipuladorPlanilhaHelper {
 			celulaDestino.setCellErrorValue(dadosCelula.getErrorValue());
 			break;
 		case BLANK:
-			// Deixar a célula em branco
 			break;
 		default:
-			// Outros tipos de célula, se necessário
 			break;
 		}
 	}
 
 	/**
-	 * Desloca as colunas para a esquerda dentro de um intervalo especificado.
+	 * Desloca as colunas para a esquerda em um intervalo especificado.
 	 *
-	 * @param inicioColuna Índice da primeira coluna a ser deslocada.
-	 * @param fimColuna    Índice da última coluna a ser deslocada.
+	 * @param inicioColuna Índice inicial.
+	 * @param fimColuna    Índice final.
 	 */
 	public void deslocarColunasParaEsquerda(int inicioColuna, int fimColuna) {
 		int ultimaLinha = sheet.getLastRowNum();
@@ -373,10 +381,10 @@ public class ManipuladorPlanilhaHelper {
 	}
 
 	/**
-	 * Desloca as colunas para a direita dentro de um intervalo especificado.
+	 * Desloca as colunas para a direita em um intervalo especificado.
 	 *
-	 * @param inicioColuna Índice da primeira coluna a ser deslocada.
-	 * @param fimColuna    Índice da última coluna a ser deslocada.
+	 * @param inicioColuna Índice inicial.
+	 * @param fimColuna    Índice final.
 	 */
 	public void deslocarColunasParaDireita(int inicioColuna, int fimColuna) {
 		int ultimaLinha = sheet.getLastRowNum();
@@ -386,13 +394,18 @@ public class ManipuladorPlanilhaHelper {
 		}
 	}
 
-	// Método privado para deslocar uma coluna específica.
+	/**
+	 * Desloca uma coluna específica em todas as linhas.
+	 *
+	 * @param colunaOrigem Índice de origem.
+	 * @param colunaAlvo   Novo índice.
+	 * @param ultimaLinha  Última linha da planilha.
+	 */
 	private void deslocarColuna(int colunaOrigem, int colunaAlvo, int ultimaLinha) {
 		for (int rowNum = 0; rowNum <= ultimaLinha; rowNum++) {
 			Row row = sheet.getRow(rowNum);
 			if (row == null)
 				continue;
-
 			Cell celulaOrigem = row.getCell(colunaOrigem + columnOffset);
 			if (celulaOrigem != null) {
 				Cell celulaAlvo = row.createCell(colunaAlvo + columnOffset);
@@ -405,7 +418,12 @@ public class ManipuladorPlanilhaHelper {
 		}
 	}
 
-	// Método privado para remover uma célula específica.
+	/**
+	 * Remove uma célula específica.
+	 *
+	 * @param row          A linha.
+	 * @param indiceCelula Índice da célula.
+	 */
 	private void removerCelula(Row row, int indiceCelula) {
 		Cell celula = row.getCell(indiceCelula);
 		if (celula != null) {
@@ -413,10 +431,14 @@ public class ManipuladorPlanilhaHelper {
 		}
 	}
 
-	// Método privado para copiar o valor entre duas células.
+	/**
+	 * Copia o valor de uma célula para outra.
+	 *
+	 * @param origem  A célula de origem.
+	 * @param destino A célula de destino.
+	 */
 	private void copiarValorEntreCelulas(Cell origem, Cell destino) {
 		destino.setCellType(origem.getCellTypeEnum());
-
 		switch (origem.getCellTypeEnum()) {
 		case STRING:
 			destino.setCellValue(origem.getStringCellValue());
@@ -434,15 +456,18 @@ public class ManipuladorPlanilhaHelper {
 			destino.setCellErrorValue(origem.getErrorCellValue());
 			break;
 		case BLANK:
-			// Deixar a célula em branco
 			break;
 		default:
-			// Outros tipos de célula, se necessário
 			break;
 		}
 	}
 
-	// Método privado para copiar o estilo entre duas células.
+	/**
+	 * Copia o estilo de uma célula para outra.
+	 *
+	 * @param origem  A célula de origem.
+	 * @param destino A célula de destino.
+	 */
 	private void copiarEstiloEntreCelulas(Cell origem, Cell destino) {
 		destino.setCellStyle(origem.getCellStyle());
 	}
@@ -458,8 +483,6 @@ public class ManipuladorPlanilhaHelper {
 		private byte errorValue;
 		private CellType cellType;
 		private CellStyle cellStyle;
-
-		// Getters e Setters
 
 		public String getStringValue() {
 			return stringValue;

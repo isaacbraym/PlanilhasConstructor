@@ -2,17 +2,50 @@ package com.abnote.planilhas.interfaces;
 
 import com.abnote.planilhas.estilos.EstiloCelula;
 
+/**
+ * Interface que define os métodos para aplicação de estilos na planilha.
+ */
 public interface IEstilos {
 
-    EstiloCelula aplicarEstilos();
+	/**
+	 * Aplica estilos na planilha conforme o contexto atual.
+	 *
+	 * @return A instância de EstiloCelula para encadeamento.
+	 */
+	EstiloCelula aplicarEstilos();
 
-    EstiloCelula centralizarTudo();
+	/**
+	 * Centraliza todas as células definidas.
+	 *
+	 * @return A instância de EstiloCelula para encadeamento.
+	 */
+	EstiloCelula centralizarTudo();
 
-    EstiloCelula redimensionarColunas();
+	/**
+	 * Redimensiona as colunas com base no conteúdo.
+	 *
+	 * @return A instância de EstiloCelula para encadeamento.
+	 */
+	EstiloCelula redimensionarColunas();
 
-    EstiloCelula removerLinhasDeGrade();
+	/**
+	 * Remove as linhas de grade da planilha.
+	 *
+	 * @return A instância de EstiloCelula para encadeamento.
+	 */
+	EstiloCelula removerLinhasDeGrade();
 
-    EstiloCelula aplicarEstilosEmCelula();
+	/**
+	 * Aplica estilos na célula atual.
+	 *
+	 * @return A instância de EstiloCelula para encadeamento.
+	 */
+	EstiloCelula aplicarEstilosEmCelula();
 
-    EstiloCelula todasAsBordasEmTudo();
+	/**
+	 * Aplica todas as bordas na planilha.
+	 *
+	 * @return A instância de EstiloCelula para encadeamento.
+	 */
+	EstiloCelula todasAsBordasEmTudo();
 }

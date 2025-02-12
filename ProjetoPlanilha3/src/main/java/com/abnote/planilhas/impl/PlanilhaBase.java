@@ -2,7 +2,7 @@ package com.abnote.planilhas.impl;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.logging.*;
+import java.util.logging.Logger;
 
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
@@ -20,27 +20,32 @@ import com.abnote.planilhas.utils.PosicaoConverter;
 import com.abnote.planilhas.utils.PositionManager;
 
 public abstract class PlanilhaBase implements IPlanilha {
+
 	private static final Logger logger = LoggerUtil.getLogger(PlanilhaBase.class);
 
 	protected Workbook workbook;
 	protected Sheet sheet;
-	private final PositionManager positionManager = new PositionManager();
-	private DataManipulator dataManipulator;
-	private StyleManager styleManager;
+	protected final PositionManager positionManager = new PositionManager();
+	protected DataManipulator dataManipulator;
+	protected StyleManager styleManager;
 	private String diretorioSaida = "C:\\opt\\tmp\\testePlanilhaSaidas";
 
 	protected abstract void inicializarWorkbook();
 
-	// Métodos de IPlanilhaBasica
+	// Método privado para (re)inicializar os manipuladores de dados e estilos
+	private void initManipulators() {
+		positionManager.resetarPosicao();
+		dataManipulator = new DataManipulator(workbook, sheet, positionManager);
+		styleManager = new StyleManager(workbook, sheet, positionManager, dataManipulator);
+	}
+
 	@Override
 	public void criarPlanilha(String nomeSheet) {
 		logger.info("Iniciando a criação da planilha: " + nomeSheet);
 		try {
 			inicializarWorkbook();
 			sheet = workbook.createSheet(nomeSheet);
-			positionManager.resetarPosicao();
-			dataManipulator = new DataManipulator(workbook, sheet, positionManager);
-			styleManager = new StyleManager(workbook, sheet, positionManager, dataManipulator);
+			initManipulators();
 			logger.info("Planilha '" + nomeSheet + "' criada com sucesso.");
 		} catch (Exception e) {
 			logger.severe("Erro ao criar a planilha '" + nomeSheet + "': " + e.getMessage());
@@ -57,9 +62,7 @@ public abstract class PlanilhaBase implements IPlanilha {
 				throw new IllegalArgumentException(msg);
 			}
 			sheet = workbook.createSheet(nomeSheet);
-			positionManager.resetarPosicao();
-			dataManipulator = new DataManipulator(workbook, sheet, positionManager);
-			styleManager = new StyleManager(workbook, sheet, positionManager, dataManipulator);
+			initManipulators();
 		} catch (Exception e) {
 			logger.severe("Erro ao criar a aba '" + nomeSheet + "': " + e.getMessage());
 			throw e;
@@ -75,18 +78,13 @@ public abstract class PlanilhaBase implements IPlanilha {
 				logger.severe(msg);
 				throw new IllegalStateException(msg);
 			}
-
 			sheet = workbook.getSheet(nomeSheet);
-
 			if (sheet == null) {
 				String msg = "A aba '" + nomeSheet + "' não foi encontrada.";
 				logger.warning(msg);
 				throw new IllegalArgumentException(msg);
 			}
-
-			positionManager.resetarPosicao();
-			dataManipulator = new DataManipulator(workbook, sheet, positionManager);
-			styleManager = new StyleManager(workbook, sheet, positionManager, dataManipulator);
+			initManipulators();
 		} catch (Exception e) {
 			logger.severe("Erro ao selecionar a aba '" + nomeSheet + "': " + e.getMessage());
 			throw e;
@@ -192,7 +190,7 @@ public abstract class PlanilhaBase implements IPlanilha {
 		return new ManipuladorPlanilha(sheet);
 	}
 
-	// Métodos de IManipulacaoDados delegados para DataManipulator
+	// Delegação dos métodos de IManipulacaoDados para dataManipulator
 
 	@Override
 	public IPlanilha naCelula(String posicao) {
@@ -285,16 +283,12 @@ public abstract class PlanilhaBase implements IPlanilha {
 				throw new IllegalStateException(
 						"Sheet não foi inicializada. Crie ou selecione uma planilha antes de inserir filtros.");
 			}
-
 			Row headerRow = encontrarLinhaDeCabecalho(sheet);
 			if (headerRow != null) {
 				int headerRowIndex = headerRow.getRowNum();
-
-				// Encontrar a primeira e a última coluna não-vazia na linha de cabeçalho
 				int firstColumn = -1;
 				int lastColumn = -1;
 				short lastCellNum = headerRow.getLastCellNum();
-
 				for (int c = 0; c < lastCellNum; c++) {
 					Cell cell = headerRow.getCell(c);
 					if (cell != null && cell.getCellTypeEnum() != CellType.BLANK && !cell.toString().trim().isEmpty()) {
@@ -304,9 +298,7 @@ public abstract class PlanilhaBase implements IPlanilha {
 						lastColumn = c;
 					}
 				}
-
 				if (firstColumn != -1 && lastColumn != -1 && lastColumn >= firstColumn) {
-					// Aplica o filtro somente sobre a faixa de colunas identificadas
 					CellRangeAddress range = new CellRangeAddress(headerRowIndex, headerRowIndex, firstColumn,
 							lastColumn);
 					sheet.setAutoFilter(range);
@@ -322,22 +314,15 @@ public abstract class PlanilhaBase implements IPlanilha {
 			logger.severe("Erro ao inserir filtros: " + e.getMessage());
 			throw e;
 		}
-
 		return this;
 	}
 
-	/**
-	 * Método auxiliar para encontrar a primeira linha que contenha conteúdo não
-	 * vazio. Esta será considerada a linha de cabeçalho.
-	 *
-	 * Critério simples: a primeira linha do topo para baixo que tiver pelo menos
-	 * uma célula não vazia. Você pode ajustar este critério conforme a necessidade.
-	 */
+	// Método auxiliar para encontrar a primeira linha com conteúdo não vazio
+	// (cabeçalho)
 	private Row encontrarLinhaDeCabecalho(Sheet sheet) {
 		for (int i = sheet.getFirstRowNum(); i <= sheet.getLastRowNum(); i++) {
 			Row row = sheet.getRow(i);
 			if (row != null && row.getLastCellNum() > 0) {
-				// Verifica se existe pelo menos uma célula não vazia
 				boolean linhaTemConteudo = false;
 				for (int c = 0; c < row.getLastCellNum(); c++) {
 					Cell cell = row.getCell(c);
@@ -353,7 +338,8 @@ public abstract class PlanilhaBase implements IPlanilha {
 		}
 		return null;
 	}
-	// Métodos de IEstilos delegados para StyleManager
+
+	// Delegação dos métodos de IEstilos para o StyleManager
 
 	@Override
 	public EstiloCelula aplicarEstilos() {
@@ -377,11 +363,17 @@ public abstract class PlanilhaBase implements IPlanilha {
 
 	@Override
 	public EstiloCelula aplicarEstilosEmCelula() {
-		return styleManager.aplicarEstilosEmCelula();
+		if (dataManipulator.getUltimoIndiceDeLinhaInserido() == -1
+				|| dataManipulator.getUltimoIndiceDeColunaInserido() == -1) {
+			return new EstiloCelula(workbook, sheet, -1, -1);
+		}
+		return new EstiloCelula(workbook, sheet, dataManipulator.getUltimoIndiceDeLinhaInserido(),
+				dataManipulator.getUltimoIndiceDeColunaInserido());
 	}
 
 	@Override
 	public EstiloCelula todasAsBordasEmTudo() {
-		return styleManager.todasAsBordasEmTudo();
+		aplicarEstilos().aplicarBordasEspessasComInternas("A1", "Z100");
+		return aplicarEstilos();
 	}
 }

@@ -4,17 +4,19 @@ import java.io.IOException;
 import java.util.List;
 import org.apache.poi.ss.usermodel.Row;
 
+/**
+ * Interface para busca de dados na planilha.
+ */
 public interface IBuscaDados {
 
 	/**
 	 * Busca dados na planilha a partir de um arquivo de entrada.
 	 *
-	 * @param caminhoArquivo Caminho do arquivo (TXT ou CSV) contendo os dados a
-	 *                       serem buscados.
-	 * @param delimitador    Delimitador usado no arquivo de entrada.
-	 * @param colunaColuna   da planilha onde os dados serão buscados (ex: "B").
+	 * @param caminhoArquivo Caminho do arquivo (TXT ou CSV) contendo os dados.
+	 * @param delimitador    Delimitador usado no arquivo.
+	 * @param coluna         Coluna onde os dados serão buscados (ex.: "B").
 	 * @return Lista de linhas onde os dados foram encontrados.
-	 * @throws IOException Se ocorrer um erro ao ler o arquivo de entrada.
+	 * @throws IOException Se ocorrer erro na leitura do arquivo.
 	 */
 	List<Row> buscarDadosDeEm(String caminhoArquivo, String delimitador, String coluna) throws IOException;
 
@@ -22,7 +24,7 @@ public interface IBuscaDados {
 	 * Busca dados na planilha a partir de uma lista de valores.
 	 *
 	 * @param valores Lista de valores a serem buscados.
-	 * @param coluna  Coluna da planilha onde os dados serão buscados (ex: "B").
+	 * @param coluna  Coluna onde os dados serão buscados (ex.: "B").
 	 * @return Lista de linhas onde os dados foram encontrados.
 	 */
 	List<Row> buscarDadosDeEm(List<String> valores, String coluna);
@@ -31,7 +33,7 @@ public interface IBuscaDados {
 	 * Salva as linhas encontradas em uma nova aba.
 	 *
 	 * @param linhas      Linhas a serem salvas.
-	 * @param nomeNovaAba Nome da nova aba onde as linhas serão salvas.
+	 * @param nomeNovaAba Nome da nova aba.
 	 */
 	void salvarLinhasEmNovaAba(List<Row> linhas, String nomeNovaAba);
 

@@ -3,7 +3,6 @@ package com.abnote.planilhas.impl;
 import com.abnote.planilhas.estilos.EstiloCelula;
 import com.abnote.planilhas.interfaces.IEstilos;
 import com.abnote.planilhas.utils.PositionManager;
-
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
@@ -25,7 +24,6 @@ public class StyleManager implements IEstilos {
 	@Override
 	public EstiloCelula aplicarEstilos() {
 		EstiloCelula estilo;
-
 		if (positionManager.isTodaPlanilhaDefinida()) {
 			estilo = new EstiloCelula(workbook, sheet);
 		} else if (positionManager.isIntervaloDefinida()) {
@@ -37,8 +35,7 @@ public class StyleManager implements IEstilos {
 		} else {
 			estilo = new EstiloCelula(workbook, sheet, dataManipulator.getUltimoIndiceDeLinhaInserido(), -1);
 		}
-
-		// Resetar o positionManager aqui
+		// Reset opcional do positionManager para evitar efeitos colaterais
 		positionManager.resetarPosicao();
 		return estilo;
 	}
@@ -70,7 +67,6 @@ public class StyleManager implements IEstilos {
 
 	@Override
 	public EstiloCelula todasAsBordasEmTudo() {
-		// Implementação real para aplicar bordas
 		aplicarEstilos().aplicarBordasEspessasComInternas("A1", "Z100");
 		return aplicarEstilos();
 	}

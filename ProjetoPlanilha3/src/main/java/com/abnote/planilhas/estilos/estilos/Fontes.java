@@ -2,11 +2,15 @@ package com.abnote.planilhas.estilos.estilos;
 
 import java.awt.Color;
 import java.util.Map;
-
 import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
+import com.abnote.planilhas.estilos.util.UtilEstiloFonte;
 
+/**
+ * Classe responsável por aplicar atributos de fonte em células, linhas ou
+ * intervalos.
+ */
 public class Fontes {
 	private final Workbook workbook;
 	private final Sheet sheet;
@@ -18,10 +22,8 @@ public class Fontes {
 		this.styleCache = styleCache;
 	}
 
-	// Método genérico para aplicar atributos de fonte
 	public void aplicarAtributosFonte(FontAttributes attributes, int rowIndex, int columnIndex, int startRowIndex,
 			int startColumnIndex, int endRowIndex, int endColumnIndex, boolean isRange) {
-
 		iterateCells(rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex, endColumnIndex, isRange,
 				(Cell cell) -> applyFontAttributesToCell(cell, attributes));
 	}
@@ -42,15 +44,13 @@ public class Fontes {
 
 	public void aplicarTachado(int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex, int endRowIndex,
 			int endColumnIndex, boolean isRange) {
-		FontAttributes attributes = new FontAttributes().setStrikeout(true); // Agora funciona
+		FontAttributes attributes = new FontAttributes().setStrikeout(true);
 		aplicarAtributosFonte(attributes, rowIndex, columnIndex, startRowIndex, startColumnIndex, endRowIndex,
 				endColumnIndex, isRange);
 	}
 
-	// Método para iterar sobre as células e aplicar uma ação
 	private void iterateCells(int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex, int endRowIndex,
 			int endColumnIndex, boolean isRange, CellAction action) {
-
 		if (isRange) {
 			for (int rowIdx = startRowIndex; rowIdx <= endRowIndex; rowIdx++) {
 				Row row = sheet.getRow(rowIdx);
@@ -65,7 +65,6 @@ public class Fontes {
 			}
 		} else if (rowIndex != -1) {
 			if (columnIndex == -1) {
-				// Aplicar à linha inteira
 				Row row = sheet.getRow(rowIndex);
 				if (row != null) {
 					for (Cell cell : row) {
@@ -75,7 +74,6 @@ public class Fontes {
 					}
 				}
 			} else {
-				// Aplicar à célula específica
 				Row row = sheet.getRow(rowIndex);
 				if (row != null) {
 					Cell cell = row.getCell(columnIndex);
@@ -87,54 +85,19 @@ public class Fontes {
 		}
 	}
 
-	// Interface funcional para aplicar ações nas células
 	@FunctionalInterface
 	private interface CellAction {
 		void apply(Cell cell);
 	}
 
-	// Método para aplicar os atributos da fonte em uma célula
 	private void applyFontAttributesToCell(Cell cell, FontAttributes attributes) {
-		// Obter o estilo atual da célula
 		CellStyle currentStyle = cell.getCellStyle();
-
-		// Clonar o estilo atual
-		CellStyle newStyle = styleCache.get("font_" + currentStyle.hashCode() + "_" + attributes.hashCode());
-		if (newStyle == null) {
-			newStyle = workbook.createCellStyle();
-			newStyle.cloneStyleFrom(currentStyle);
-
-			// Obter a fonte atual
-			Font currentFont = workbook.getFontAt(currentStyle.getFontIndex());
-
-			// Criar ou obter uma fonte com os novos atributos
-			Font newFont = findOrCreateFont(currentFont, attributes);
-
-			// Associar a nova fonte ao novo estilo
-			newStyle.setFont(newFont);
-
-			// Armazenar no cache
-			styleCache.put("font_" + currentStyle.hashCode() + "_" + attributes.hashCode(), newStyle);
-		}
-
-		// Aplicar o novo estilo à célula
-		cell.setCellStyle(newStyle);
-	}
-
-	private Font findOrCreateFont(Font currentFont, FontAttributes attributes) {
-		// Verificar se já existe uma fonte com os atributos desejados
-		for (short i = 0; i < workbook.getNumberOfFonts(); i++) {
-			Font font = workbook.getFontAt(i);
-			if (fontMatchesAttributes(font, currentFont, attributes)) {
-				return font;
-			}
-		}
-
-		// Se não encontrou, criar uma nova fonte clonando a atual e alterando os
-		// atributos
-		Font newFont = workbook.createFont();
-		copyFontAttributes(newFont, currentFont, attributes);
-		return newFont;
+		String keyPrefix = "font_" + currentStyle.hashCode() + "_" + attributes.hashCode();
+		UtilEstiloFonte.aplicarNovaFonte(cell, workbook, styleCache, keyPrefix, (Font currentFont) -> {
+			Font newFont = workbook.createFont();
+			copyFontAttributes(newFont, currentFont, attributes);
+			return newFont;
+		});
 	}
 
 	private boolean fontMatchesAttributes(Font font, Font baseFont, FontAttributes attributes) {
@@ -159,14 +122,10 @@ public class Fontes {
 		if (attributes.getColorRGB() != null && !fontsHaveSameRGBColor(font, attributes.getColorRGB())) {
 			return false;
 		}
-		// Comparar outros atributos conforme necessário
-
-		// Comparar atributos não alterados
 		return fontsHaveSameBaseAttributes(font, baseFont, attributes);
 	}
 
 	private boolean fontsHaveSameBaseAttributes(Font font1, Font font2, FontAttributes attributes) {
-		// Comparar atributos que não foram alterados
 		if (attributes.getFontName() == null && !font1.getFontName().equals(font2.getFontName())) {
 			return false;
 		}
@@ -188,7 +147,6 @@ public class Fontes {
 		if (attributes.getColorRGB() == null && !fontsHaveSameColor(font1, font2)) {
 			return false;
 		}
-		// Comparar outros atributos conforme necessário
 		return true;
 	}
 
@@ -203,13 +161,11 @@ public class Fontes {
 		newFont.setStrikeout(attributes.isStrikeout() != null ? attributes.isStrikeout() : currentFont.getStrikeout());
 		newFont.setCharSet(currentFont.getCharSet());
 		newFont.setTypeOffset(currentFont.getTypeOffset());
-
 		if (attributes.getColorRGB() != null) {
 			if (newFont instanceof XSSFFont) {
 				XSSFFont xssfFont = (XSSFFont) newFont;
 				xssfFont.setColor(new XSSFColor(attributes.getColorRGB()));
 			} else if (newFont instanceof HSSFFont) {
-				// Para HSSF, mapeie para a cor indexada mais próxima
 				short colorIndex = getNearestColorIndex(attributes.getColorRGB());
 				newFont.setColor(colorIndex);
 			}
@@ -248,11 +204,8 @@ public class Fontes {
 	}
 
 	private short getNearestColorIndex(Color color) {
-		// Implementação para HSSF se necessário
-		return IndexedColors.BLACK.getIndex(); // Retorne preto como padrão
+		return IndexedColors.BLACK.getIndex();
 	}
-
-	// Métodos públicos para aplicar estilos específicos
 
 	public void aplicarCorFonte(CorEnum corEnum, int rowIndex, int columnIndex, int startRowIndex, int startColumnIndex,
 			int endRowIndex, int endColumnIndex, boolean isRange) {
@@ -298,14 +251,10 @@ public class Fontes {
 				endColumnIndex, isRange);
 	}
 
-	// Método para converter código hexadecimal em Color
 	private Color hexToColor(String hexColor) {
 		if (hexColor == null || !hexColor.matches("^#([A-Fa-f0-9]{6})$")) {
 			throw new IllegalArgumentException("Código hexadecimal de cor inválido: " + hexColor);
 		}
 		return Color.decode(hexColor);
 	}
-
-	// Criar métodos para aplicar outros estilos dealinhamentos,quebra de texto,
-	// etc.
 }

@@ -1,5 +1,8 @@
 package com.abnote.planilhas.utils;
 
+/**
+ * Gerencia as posições e intervalos de células para operações na planilha.
+ */
 public class PositionManager {
 	private int posicaoInicialColuna = 0;
 	private int posicaoInicialLinha = 0;
@@ -9,37 +12,37 @@ public class PositionManager {
 	private boolean posicaoDefinida = false;
 	private boolean todaPlanilhaDefinida = false;
 
+	/**
+	 * Define a célula inicial a partir da posição informada (ex: "B2").
+	 *
+	 * @param posicao Posição no formato alfanumérico.
+	 */
 	public void naCelula(String posicao) {
-		int coluna = 0;
-		int linha = 0;
-
-		for (int i = 0; i < posicao.length(); i++) {
-			char ch = posicao.charAt(i);
-			if (Character.isLetter(ch)) {
-				coluna = coluna * 26 + (Character.toUpperCase(ch) - 'A' + 1);
-			} else if (Character.isDigit(ch)) {
-				linha = Integer.parseInt(posicao.substring(i)) - 1;
-				break;
-			}
-		}
-
-		this.posicaoInicialColuna = coluna - 1;
-		this.posicaoInicialLinha = linha;
+		int[] posicoes = PosicaoConverter.converterPosicao(posicao);
+		this.posicaoInicialColuna = posicoes[0];
+		this.posicaoInicialLinha = posicoes[1];
 		this.posicaoDefinida = true;
 	}
 
+	/**
+	 * Define um intervalo a partir das posições informadas.
+	 *
+	 * @param posicaoInicial Posição inicial (ex: "B2").
+	 * @param posicaoFinal   Posição final (ex: "E10").
+	 */
 	public void noIntervalo(String posicaoInicial, String posicaoFinal) {
 		int[] inicio = PosicaoConverter.converterPosicao(posicaoInicial);
 		int[] fim = PosicaoConverter.converterPosicao(posicaoFinal);
-
 		this.posicaoInicialColuna = inicio[0];
 		this.posicaoInicialLinha = inicio[1];
 		this.posicaoFinalColuna = fim[0];
 		this.posicaoFinalLinha = fim[1];
-
 		this.intervaloDefinida = true;
 	}
 
+	/**
+	 * Indica que as operações serão aplicadas em toda a planilha.
+	 */
 	public void emTodaAPlanilha() {
 		this.todaPlanilhaDefinida = true;
 	}
@@ -48,6 +51,9 @@ public class PositionManager {
 		return todaPlanilhaDefinida;
 	}
 
+	/**
+	 * Reseta todas as definições de posição e intervalo.
+	 */
 	public void resetarPosicao() {
 		this.posicaoInicialColuna = 0;
 		this.posicaoInicialLinha = 0;

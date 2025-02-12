@@ -1,7 +1,8 @@
 package com.abnote.planilhas.utils;
 
-import org.apache.poi.ss.usermodel.*;
-import java.util.*;
+import org.apache.poi.ss.usermodel.Sheet;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ManipuladorPlanilha {
 	private Sheet sheet;
@@ -10,21 +11,12 @@ public class ManipuladorPlanilha {
 	private int columnOffset;
 	private ManipuladorPlanilhaHelper helper;
 
-	/**
-	 * Construtor que determina o columnOffset automaticamente.
-	 *
-	 * @param sheet A planilha a ser manipulada.
-	 */
+	// Construtor que determina automaticamente o columnOffset
 	public ManipuladorPlanilha(Sheet sheet) {
 		this(sheet, ManipuladorPlanilhaHelper.determinarColunaInicial(sheet));
 	}
 
-	/**
-	 * Construtor que permite configurar o columnOffset manualmente.
-	 *
-	 * @param sheet        A planilha a ser manipulada.
-	 * @param columnOffset O deslocamento a ser aplicado nas operações de coluna.
-	 */
+	// Construtor que permite definir o columnOffset manualmente
 	public ManipuladorPlanilha(Sheet sheet, int columnOffset) {
 		this.sheet = sheet;
 		this.columnOffset = columnOffset;
@@ -32,25 +24,6 @@ public class ManipuladorPlanilha {
 		this.helper = new ManipuladorPlanilhaHelper(sheet, columnOffset);
 	}
 
-	/**
-	 * Setter para ajustar o offset se necessário.
-	 *
-	 * @param columnOffset O novo deslocamento a ser aplicado.
-	 */
-	private void setColumnOffset(int columnOffset) {
-		this.columnOffset = columnOffset;
-		// Atualizar o helper com o novo offset
-		this.helper = new ManipuladorPlanilhaHelper(sheet, columnOffset);
-	}
-
-	/**
-	 * Método para mover uma coluna de uma posição para outra.
-	 *
-	 * @param moverAColuna Nome da coluna a ser movida (ex: "A", "B", etc.).
-	 * @param paraAPosicao Nome da coluna para a qual será movida (ex: "C", "D",
-	 *                     etc.).
-	 * @return Instância atual de ManipuladorPlanilha para encadeamento de métodos.
-	 */
 	public ManipuladorPlanilha moverColuna(String moverAColuna, String paraAPosicao) {
 		int colunaOrigem = PosicaoConverter.converterColuna(moverAColuna) - columnOffset;
 		int colunaDestino = PosicaoConverter.converterColuna(paraAPosicao) - columnOffset;
@@ -67,8 +40,10 @@ public class ManipuladorPlanilha {
 		LogsDeModificadores.ActionLog actionLog = new LogsDeModificadores.ActionLog("Deslocamento de colunas",
 				mainMovement);
 
+		// Copia a coluna de origem para armazenamento temporário
 		colunaTemporaria = helper.copiarColuna(colunaOrigem);
 
+		// Desloca as colunas conforme a direção do movimento
 		if (colunaOrigem < colunaDestino) {
 			helper.deslocarColunasParaEsquerda(colunaOrigem + 1, colunaDestino);
 			helper.registrarColunasDeslocadas(colunaOrigem, colunaDestino, headerMap, actionLog);
@@ -77,6 +52,7 @@ public class ManipuladorPlanilha {
 			helper.registrarColunasDeslocadas(colunaOrigem, colunaDestino, headerMap, actionLog);
 		}
 
+		// Cola a coluna temporária na posição de destino
 		helper.colarColunaTemporaria(colunaDestino, colunaTemporaria);
 		colunaTemporaria.clear();
 		logs.adicionarLog(actionLog);
@@ -84,12 +60,6 @@ public class ManipuladorPlanilha {
 		return this;
 	}
 
-	/**
-	 * Método para remover uma coluna específica.
-	 *
-	 * @param coluna Nome da coluna a ser removida (ex: "A", "B", etc.).
-	 * @return Instância atual de ManipuladorPlanilha para encadeamento de métodos.
-	 */
 	public ManipuladorPlanilha removerColuna(String coluna) {
 		int colIndex = PosicaoConverter.converterColuna(coluna) - columnOffset;
 		int lastColumn = helper.obterNumeroUltimaColuna();
@@ -103,7 +73,7 @@ public class ManipuladorPlanilha {
 		helper.removerCelulasDaColuna(colIndex);
 
 		if (colIndex < lastColumn) {
-			helper.deslocarColunasParaEsquerda(colIndex + 1, lastColumn); // Atualizado
+			helper.deslocarColunasParaEsquerda(colIndex + 1, lastColumn);
 			helper.registrarColunasDeslocadasRemocao(colIndex, lastColumn, headerMap, actionLog);
 		}
 
@@ -111,20 +81,11 @@ public class ManipuladorPlanilha {
 		return this;
 	}
 
-	/**
-	 * Método para limpar os dados de uma coluna sem remover ou deslocar a coluna.
-	 *
-	 * @param coluna Nome da coluna a ser limpa (ex: "A", "B", etc.).
-	 * @return Instância atual de ManipuladorPlanilha para encadeamento de métodos.
-	 */
 	public ManipuladorPlanilha limparColuna(String coluna) {
 		int colIndex = PosicaoConverter.converterColuna(coluna) - columnOffset;
-
-		// Utilizando o método helper para limpar a coluna
 		helper.limparColuna(colIndex);
 
-		// Registrar a ação no log
-		Map<Integer, String> headerMap = helper.obterMapaDeCabecalhos(); // Atualizado
+		Map<Integer, String> headerMap = helper.obterMapaDeCabecalhos();
 		String headerName = headerMap.get(colIndex);
 		LogsDeModificadores.ActionLog actionLog = new LogsDeModificadores.ActionLog("Limpeza de coluna",
 				new LogsDeModificadores.ColumnMovement(headerName,
@@ -134,13 +95,6 @@ public class ManipuladorPlanilha {
 		return this;
 	}
 
-	/**
-	 * Método para inserir uma coluna vazia entre duas colunas especificadas.
-	 *
-	 * @param colunaEsquerda Nome da coluna à esquerda (ex: "A", "B", etc.).
-	 * @param colunaDireita  Nome da coluna à direita (ex: "C", "D", etc.).
-	 * @return Instância atual de ManipuladorPlanilha para encadeamento de métodos.
-	 */
 	public ManipuladorPlanilha inserirColunaVaziaEntre(String colunaEsquerda, String colunaDireita) {
 		int colEsquerdaIndex = PosicaoConverter.converterColuna(colunaEsquerda) - columnOffset;
 		int colDireitaIndex = PosicaoConverter.converterColuna(colunaDireita) - columnOffset;
@@ -155,8 +109,8 @@ public class ManipuladorPlanilha {
 				new LogsDeModificadores.ColumnMovement(null, colunaEsquerda, colunaDireita));
 
 		if (posicaoInsercao <= lastColumn) {
-			helper.deslocarColunasParaDireita(posicaoInsercao, lastColumn); // Atualizado
-			helper.registrarColunasDeslocadasInsercao(posicaoInsercao, lastColumn, headerMap, actionLog); // Atualizado
+			helper.deslocarColunasParaDireita(posicaoInsercao, lastColumn);
+			helper.registrarColunasDeslocadasInsercao(posicaoInsercao, lastColumn, headerMap, actionLog);
 			logs.adicionarLog(actionLog);
 		}
 
@@ -164,9 +118,6 @@ public class ManipuladorPlanilha {
 		return this;
 	}
 
-	/**
-	 * Método para exibir o log de rastreio.
-	 */
 	public void logAlteracoes() {
 		logs.exibirLogs();
 	}

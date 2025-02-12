@@ -48,7 +48,6 @@ public class BackGroundColor {
 
 	public void aplicarCorDeFundo(int red, int green, int blue, int rowIndex, int columnIndex, int startRowIndex,
 			int startColumnIndex, int endRowIndex, int endColumnIndex, boolean isRange) {
-
 		if (isRange) {
 			for (int rowIdx = startRowIndex; rowIdx <= endRowIndex; rowIdx++) {
 				Row row = sheet.getRow(rowIdx);
@@ -63,7 +62,6 @@ public class BackGroundColor {
 			}
 		} else if (rowIndex != -1) {
 			if (columnIndex == -1) {
-				// Aplicar à linha inteira
 				Row row = sheet.getRow(rowIndex);
 				if (row != null) {
 					for (Cell cell : row) {
@@ -73,7 +71,6 @@ public class BackGroundColor {
 					}
 				}
 			} else {
-				// Aplicar à célula específica
 				Row row = sheet.getRow(rowIndex);
 				if (row != null) {
 					Cell cell = row.getCell(columnIndex);
@@ -87,8 +84,6 @@ public class BackGroundColor {
 
 	private void applyBackgroundColorToCell(Cell cell, int red, int green, int blue) {
 		CellStyle currentStyle = cell.getCellStyle();
-
-		// Clonar o estilo atual
 		CellStyle newStyle = workbook.createCellStyle();
 		newStyle.cloneStyleFrom(currentStyle);
 
@@ -98,18 +93,14 @@ public class BackGroundColor {
 			xssfCellStyle.setFillForegroundColor(xssfColor);
 			xssfCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 		} else if (newStyle instanceof HSSFCellStyle) {
-			// Para HSSF, mapeie para a cor indexada mais próxima
 			short colorIndex = getNearestColorIndex(red, green, blue);
 			newStyle.setFillForegroundColor(colorIndex);
 			newStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 		}
-
-		// Aplicar o novo estilo à célula
 		cell.setCellStyle(newStyle);
 	}
 
 	private short getNearestColorIndex(int red, int green, int blue) {
-		// Implementação para HSSF se necessário
 		return IndexedColors.AUTOMATIC.getIndex();
 	}
 }
