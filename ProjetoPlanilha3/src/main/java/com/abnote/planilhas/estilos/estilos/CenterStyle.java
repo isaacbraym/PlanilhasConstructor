@@ -82,7 +82,7 @@ public class CenterStyle {
 		CellStyle originalStyle = cell.getCellStyle();
 
 		// Verificar o alinhamento atual da célula
-		HorizontalAlignment currentAlignment = originalStyle.getAlignmentEnum();
+		HorizontalAlignment currentAlignment = originalStyle.getAlignment();
 		if (currentAlignment == HorizontalAlignment.GENERAL || currentAlignment == null) {
 			// Apenas centralizar se o alinhamento for 'GERAL' ou nulo
 			CellStyle novoEstilo = criarEstiloCentralizado(originalStyle);
@@ -119,8 +119,8 @@ public class CenterStyle {
 			for (Cell cell : row) {
 				if (cell == null)
 					continue;
-				if (cell.getCellTypeEnum() == CellType.FORMULA) {
-					evaluator.evaluateFormulaCellEnum(cell);
+				if (cell.getCellType() == CellType.FORMULA) {
+					evaluator.evaluateFormulaCell(cell);
 				}
 			}
 		}

@@ -151,31 +151,35 @@ public class Fontes {
 	}
 
 	private void copyFontAttributes(Font newFont, Font currentFont, FontAttributes attributes) {
-		newFont.setFontName(attributes.getFontName() != null ? attributes.getFontName() : currentFont.getFontName());
-		newFont.setFontHeightInPoints(
-				attributes.getFontSize() != null ? attributes.getFontSize() : currentFont.getFontHeightInPoints());
-		newFont.setBold(attributes.isBold() != null ? attributes.isBold() : currentFont.getBold());
-		newFont.setItalic(attributes.isItalic() != null ? attributes.isItalic() : currentFont.getItalic());
-		newFont.setUnderline(
-				attributes.getUnderline() != null ? attributes.getUnderline() : currentFont.getUnderline());
-		newFont.setStrikeout(attributes.isStrikeout() != null ? attributes.isStrikeout() : currentFont.getStrikeout());
-		newFont.setCharSet(currentFont.getCharSet());
-		newFont.setTypeOffset(currentFont.getTypeOffset());
-		if (attributes.getColorRGB() != null) {
-			if (newFont instanceof XSSFFont) {
-				XSSFFont xssfFont = (XSSFFont) newFont;
-				xssfFont.setColor(new XSSFColor(attributes.getColorRGB()));
-			} else if (newFont instanceof HSSFFont) {
-				short colorIndex = getNearestColorIndex(attributes.getColorRGB());
-				newFont.setColor(colorIndex);
-			}
-		} else {
-			newFont.setColor(currentFont.getColor());
-			if (currentFont instanceof XSSFFont && newFont instanceof XSSFFont) {
-				XSSFColor color = ((XSSFFont) currentFont).getXSSFColor();
-				((XSSFFont) newFont).setColor(color);
-			}
-		}
+	    newFont.setFontName(attributes.getFontName() != null ? attributes.getFontName() : currentFont.getFontName());
+	    newFont.setFontHeightInPoints(
+	            attributes.getFontSize() != null ? attributes.getFontSize() : currentFont.getFontHeightInPoints());
+	    newFont.setBold(attributes.isBold() != null ? attributes.isBold() : currentFont.getBold());
+	    newFont.setItalic(attributes.isItalic() != null ? attributes.isItalic() : currentFont.getItalic());
+	    newFont.setUnderline(
+	            attributes.getUnderline() != null ? attributes.getUnderline() : currentFont.getUnderline());
+	    newFont.setStrikeout(attributes.isStrikeout() != null ? attributes.isStrikeout() : currentFont.getStrikeout());
+	    newFont.setCharSet(currentFont.getCharSet());
+	    newFont.setTypeOffset(currentFont.getTypeOffset());
+	    if (attributes.getColorRGB() != null) {
+	        if (newFont instanceof XSSFFont) {
+	            XSSFFont xssfFont = (XSSFFont) newFont;
+	            // POI 5.x: Converter Color para byte[] 
+	            Color cor = attributes.getColorRGB();
+	            byte[] rgb = new byte[]{(byte) cor.getRed(), (byte) cor.getGreen(), (byte) cor.getBlue()};
+	            XSSFColor xssfColor = new XSSFColor(rgb, null);
+	            xssfFont.setColor(xssfColor);
+	        } else if (newFont instanceof HSSFFont) {
+	            short colorIndex = getNearestColorIndex(attributes.getColorRGB());
+	            newFont.setColor(colorIndex);
+	        }
+	    } else {
+	        newFont.setColor(currentFont.getColor());
+	        if (currentFont instanceof XSSFFont && newFont instanceof XSSFFont) {
+	            XSSFColor color = ((XSSFFont) currentFont).getXSSFColor();
+	            ((XSSFFont) newFont).setColor(color);
+	        }
+	    }
 	}
 
 	private boolean fontsHaveSameColor(Font font1, Font font2) {

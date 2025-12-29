@@ -83,21 +83,22 @@ public class BackGroundColor {
 	}
 
 	private void applyBackgroundColorToCell(Cell cell, int red, int green, int blue) {
-		CellStyle currentStyle = cell.getCellStyle();
-		CellStyle newStyle = workbook.createCellStyle();
-		newStyle.cloneStyleFrom(currentStyle);
+	    CellStyle currentStyle = cell.getCellStyle();
+	    CellStyle newStyle = workbook.createCellStyle();
+	    newStyle.cloneStyleFrom(currentStyle);
 
-		if (newStyle instanceof XSSFCellStyle) {
-			XSSFCellStyle xssfCellStyle = (XSSFCellStyle) newStyle;
-			XSSFColor xssfColor = new XSSFColor(new Color(red, green, blue));
-			xssfCellStyle.setFillForegroundColor(xssfColor);
-			xssfCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-		} else if (newStyle instanceof HSSFCellStyle) {
-			short colorIndex = getNearestColorIndex(red, green, blue);
-			newStyle.setFillForegroundColor(colorIndex);
-			newStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-		}
-		cell.setCellStyle(newStyle);
+	    if (newStyle instanceof XSSFCellStyle) {
+	        XSSFCellStyle xssfCellStyle = (XSSFCellStyle) newStyle;
+	        byte[] rgb = new byte[]{(byte) red, (byte) green, (byte) blue};
+	        XSSFColor xssfColor = new XSSFColor(rgb, null);
+	        xssfCellStyle.setFillForegroundColor(xssfColor);
+	        xssfCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+	    } else if (newStyle instanceof HSSFCellStyle) {
+	        short colorIndex = getNearestColorIndex(red, green, blue);
+	        newStyle.setFillForegroundColor(colorIndex);
+	        newStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+	    }
+	    cell.setCellStyle(newStyle);
 	}
 
 	private short getNearestColorIndex(int red, int green, int blue) {

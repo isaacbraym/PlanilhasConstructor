@@ -8,13 +8,6 @@ import com.abnote.planilhas.estilos.EstiloCelula;
 public interface IEstilos {
 
 	/**
-	 * Aplica estilos na planilha conforme o contexto atual.
-	 *
-	 * @return A instância de EstiloCelula para encadeamento.
-	 */
-	EstiloCelula aplicarEstilos();
-
-	/**
 	 * Centraliza todas as células definidas.
 	 *
 	 * @return A instância de EstiloCelula para encadeamento.

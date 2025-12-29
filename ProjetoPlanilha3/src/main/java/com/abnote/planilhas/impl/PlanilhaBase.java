@@ -12,12 +12,17 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddress;
 
 import com.abnote.planilhas.estilos.EstiloCelula;
+import com.abnote.planilhas.exceptions.ArquivoException;
 import com.abnote.planilhas.interfaces.IManipulacaoDados;
 import com.abnote.planilhas.interfaces.IPlanilha;
+import com.abnote.planilhas.interfaces.ISelecao;
 import com.abnote.planilhas.utils.LoggerUtil;
 import com.abnote.planilhas.utils.ManipuladorPlanilha;
 import com.abnote.planilhas.utils.PosicaoConverter;
 import com.abnote.planilhas.utils.PositionManager;
+import com.abnote.planilhas.formulas.FormulaBuilder;
+import com.abnote.planilhas.interfaces.IConversao;
+import com.abnote.planilhas.interfaces.IFormulas;
 
 public abstract class PlanilhaBase implements IPlanilha {
 
@@ -28,17 +33,20 @@ public abstract class PlanilhaBase implements IPlanilha {
 	protected final PositionManager positionManager = new PositionManager();
 	protected DataManipulator dataManipulator;
 	protected StyleManager styleManager;
+	protected ConversaoManager conversaoManager;
+	protected SelecaoManager selecaoManager;
 	private String diretorioSaida = "C:\\opt\\tmp\\testePlanilhaSaidas";
 
 	protected abstract void inicializarWorkbook();
 
 	// Método privado para (re)inicializar os manipuladores de dados e estilos
 	private void initManipulators() {
-		positionManager.resetarPosicao();
-		dataManipulator = new DataManipulator(workbook, sheet, positionManager);
-		styleManager = new StyleManager(workbook, sheet, positionManager, dataManipulator);
+	    positionManager.resetarPosicao();
+	    dataManipulator = new DataManipulator(workbook, sheet, positionManager);
+	    styleManager = new StyleManager(workbook, sheet, positionManager, dataManipulator);
+	    conversaoManager = new ConversaoManager(sheet, workbook, this);
+	    selecaoManager = new SelecaoManager(this, dataManipulator, positionManager);
 	}
-
 	@Override
 	public void criarPlanilha(String nomeSheet) {
 		logger.info("Iniciando a criação da planilha: " + nomeSheet);
@@ -70,7 +78,7 @@ public abstract class PlanilhaBase implements IPlanilha {
 	}
 
 	@Override
-	public void SELECIONAR_SHEET(String nomeSheet) {
+	public void selecionarSheet(String nomeSheet) {
 		logger.fine("Atuando na Sheet: " + nomeSheet);
 		try {
 			if (workbook == null) {
@@ -91,15 +99,40 @@ public abstract class PlanilhaBase implements IPlanilha {
 		}
 	}
 
+    @Override
+    public void salvar(String nomeArquivo) { 
+        if (nomeArquivo == null || nomeArquivo.trim().isEmpty()) {
+            throw new ArquivoException(
+                "Nome do arquivo não pode ser nulo ou vazio",
+                nomeArquivo
+            );
+        }
+        
+        try (FileOutputStream arquivoSaida = new FileOutputStream(nomeArquivo)) {
+            workbook.write(arquivoSaida);
+            logger.info("Planilha salva com sucesso em: " + nomeArquivo);
+        } catch (IOException e) {
+            logger.severe("Erro ao salvar a planilha em '" + nomeArquivo + "': " + e.getMessage());
+            throw new ArquivoException(
+                "Erro ao salvar planilha. Verifique permissões e espaço em disco",
+                nomeArquivo,
+                e
+            );
+        }
+    }
+	
 	@Override
-	public void salvar(String nomeArquivo) throws IOException {
-		try (FileOutputStream arquivoSaida = new FileOutputStream(nomeArquivo)) {
-			workbook.write(arquivoSaida);
-			logger.info("Planilha salva com sucesso em: " + nomeArquivo);
-		} catch (IOException e) {
-			logger.severe("Erro ao salvar a planilha em '" + nomeArquivo + "': " + e.getMessage());
-			throw e;
-		}
+	public IFormulas formula() {
+	    int linhaAtual = dataManipulator.getLinhaSelecionadaAtual();
+	    int colunaAtual = dataManipulator.getColunaSelecionadaAtual();
+	    
+	    if (linhaAtual < 0 || colunaAtual < 0) {
+	        throw new IllegalStateException(
+	            "Nenhuma célula foi selecionada. Use naCelula() antes de formula()"
+	        );
+	    }
+	    
+	    return new FormulaBuilder(workbook, sheet, linhaAtual, colunaAtual, this);
 	}
 
 	@Override
@@ -137,7 +170,7 @@ public abstract class PlanilhaBase implements IPlanilha {
 			Row row = sheet.getRow(i);
 			if (row != null) {
 				Cell cell = row.getCell(colunaIndex);
-				if (cell != null && cell.getCellTypeEnum() != CellType.BLANK) {
+				if (cell != null && cell.getCellType() != CellType.BLANK) {
 					numRows++;
 				}
 			}
@@ -156,7 +189,7 @@ public abstract class PlanilhaBase implements IPlanilha {
 		short lastCellNum = row.getLastCellNum();
 		for (int i = 0; i < lastCellNum; i++) {
 			Cell cell = row.getCell(i);
-			if (cell != null && cell.getCellTypeEnum() != CellType.BLANK) {
+			if (cell != null && cell.getCellType() != CellType.BLANK) {
 				numCols++;
 			}
 		}
@@ -191,18 +224,6 @@ public abstract class PlanilhaBase implements IPlanilha {
 	}
 
 	// Delegação dos métodos de IManipulacaoDados para dataManipulator
-
-	@Override
-	public IPlanilha naCelula(String posicao) {
-		dataManipulator.naCelula(posicao);
-		return this;
-	}
-
-	@Override
-	public IPlanilha noIntervalo(String posicaoInicial, String posicaoFinal) {
-		dataManipulator.noIntervalo(posicaoInicial, posicaoFinal);
-		return this;
-	}
 
 	@Override
 	public IPlanilha inserirDados(Object dados, String delimitador) {
@@ -240,18 +261,6 @@ public abstract class PlanilhaBase implements IPlanilha {
 	}
 
 	@Override
-	public IPlanilha converterEmNumero(String posicaoInicial) {
-		dataManipulator.converterEmNumero(posicaoInicial);
-		return this;
-	}
-
-	@Override
-	public IPlanilha converterEmContabil(String posicaoInicial) {
-		dataManipulator.converterEmContabil(posicaoInicial);
-		return this;
-	}
-
-	@Override
 	public IPlanilha somarColuna(String posicaoInicial) {
 		dataManipulator.somarColuna(posicaoInicial);
 		return this;
@@ -285,18 +294,18 @@ public abstract class PlanilhaBase implements IPlanilha {
 			}
 			Row headerRow = encontrarLinhaDeCabecalho(sheet);
 			if (headerRow != null) {
-				int headerRowIndex = headerRow.getRowNum();
-				int firstColumn = -1;
-				int lastColumn = -1;
-				short lastCellNum = headerRow.getLastCellNum();
-				for (int c = 0; c < lastCellNum; c++) {
-					Cell cell = headerRow.getCell(c);
-					if (cell != null && cell.getCellTypeEnum() != CellType.BLANK && !cell.toString().trim().isEmpty()) {
-						if (firstColumn == -1) {
-							firstColumn = c;
-						}
-						lastColumn = c;
-					}
+			    int headerRowIndex = headerRow.getRowNum();
+			    int firstColumn = -1;
+			    int lastColumn = -1;
+			    short lastCellNum = headerRow.getLastCellNum();
+			    for (int c = 0; c < lastCellNum; c++) {
+			        Cell cell = headerRow.getCell(c);
+			        if (cell != null && cell.getCellType() != CellType.BLANK && !cell.toString().trim().isEmpty()) {
+			            if (firstColumn == -1) {
+			                firstColumn = c;
+			            }
+			            lastColumn = c;
+			        }
 				}
 				if (firstColumn != -1 && lastColumn != -1 && lastColumn >= firstColumn) {
 					CellRangeAddress range = new CellRangeAddress(headerRowIndex, headerRowIndex, firstColumn,
@@ -317,26 +326,25 @@ public abstract class PlanilhaBase implements IPlanilha {
 		return this;
 	}
 
-	// Método auxiliar para encontrar a primeira linha com conteúdo não vazio
-	// (cabeçalho)
+	// Método auxiliar para encontrar a primeira linha com conteúdo não vazio(cabeçalho)
 	private Row encontrarLinhaDeCabecalho(Sheet sheet) {
-		for (int i = sheet.getFirstRowNum(); i <= sheet.getLastRowNum(); i++) {
-			Row row = sheet.getRow(i);
-			if (row != null && row.getLastCellNum() > 0) {
-				boolean linhaTemConteudo = false;
-				for (int c = 0; c < row.getLastCellNum(); c++) {
-					Cell cell = row.getCell(c);
-					if (cell != null && cell.getCellTypeEnum() != CellType.BLANK && !cell.toString().trim().isEmpty()) {
-						linhaTemConteudo = true;
-						break;
-					}
-				}
-				if (linhaTemConteudo) {
-					return row;
-				}
-			}
-		}
-		return null;
+	    for (int i = sheet.getFirstRowNum(); i <= sheet.getLastRowNum(); i++) {
+	        Row row = sheet.getRow(i);
+	        if (row != null && row.getLastCellNum() > 0) {
+	            boolean linhaTemConteudo = false;
+	            for (int c = 0; c < row.getLastCellNum(); c++) {
+	                Cell cell = row.getCell(c);
+	                if (cell != null && cell.getCellType() != CellType.BLANK && !cell.toString().trim().isEmpty()) {
+	                    linhaTemConteudo = true;
+	                    break;
+	                }
+	            }
+	            if (linhaTemConteudo) {
+	                return row;
+	            }
+	        }
+	    }
+	    return null;
 	}
 
 	// Delegação dos métodos de IEstilos para o StyleManager
@@ -375,5 +383,35 @@ public abstract class PlanilhaBase implements IPlanilha {
 	public EstiloCelula todasAsBordasEmTudo() {
 		aplicarEstilos().aplicarBordasEspessasComInternas("A1", "Z100");
 		return aplicarEstilos();
+	}
+	
+	@Override
+	public IConversao converter() {
+	    return conversaoManager;
+	}
+
+	@Override
+	public ISelecao selecionar() {
+	    return selecaoManager;
+	}
+	
+	/**
+	 * Fecha o workbook e libera todos os recursos associados.
+	 * Este método deve ser chamado sempre que terminar de trabalhar com a planilha.
+	 * Recomenda-se usar try-with-resources para garantir fechamento automático.
+	 * 
+	 * @throws Exception se houver erro ao fechar o workbook
+	 */
+	@Override
+	public void close() throws Exception {
+	    if (workbook != null) {
+	        try {
+	            workbook.close();
+	            logger.info("Workbook fechado com sucesso.");
+	        } catch (IOException e) {
+	            logger.severe("Erro ao fechar workbook: " + e.getMessage());
+	            throw e;
+	        }
+	    }
 	}
 }

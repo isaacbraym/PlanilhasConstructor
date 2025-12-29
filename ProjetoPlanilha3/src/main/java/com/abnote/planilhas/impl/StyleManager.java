@@ -21,7 +21,6 @@ public class StyleManager implements IEstilos {
 		this.dataManipulator = dataManipulator;
 	}
 
-	@Override
 	public EstiloCelula aplicarEstilos() {
 		EstiloCelula estilo;
 		if (positionManager.isTodaPlanilhaDefinida()) {

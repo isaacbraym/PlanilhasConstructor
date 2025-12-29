@@ -72,7 +72,7 @@ public class ManipuladorPlanilhaHelper {
 	public static String obterValorCelulaComoString(Cell cell) {
 		if (cell == null)
 			return null;
-		CellType tipoCelula = cell.getCellTypeEnum();
+		CellType tipoCelula = cell.getCellType();
 		switch (tipoCelula) {
 		case STRING:
 			return cell.getStringCellValue();
@@ -309,9 +309,9 @@ public class ManipuladorPlanilhaHelper {
 	 * @param dadosCelula  Objeto para armazenar os dados.
 	 */
 	private void copiarDadosCelula(Cell celulaOrigem, CellData dadosCelula) {
-		dadosCelula.setCellType(celulaOrigem.getCellTypeEnum());
+		dadosCelula.setCellType(celulaOrigem.getCellType());
 		dadosCelula.setCellStyle(celulaOrigem.getCellStyle());
-		switch (celulaOrigem.getCellTypeEnum()) {
+		switch (celulaOrigem.getCellType()) {
 		case STRING:
 			dadosCelula.setStringValue(celulaOrigem.getStringCellValue());
 			break;
@@ -438,8 +438,8 @@ public class ManipuladorPlanilhaHelper {
 	 * @param destino A célula de destino.
 	 */
 	private void copiarValorEntreCelulas(Cell origem, Cell destino) {
-		destino.setCellType(origem.getCellTypeEnum());
-		switch (origem.getCellTypeEnum()) {
+		destino.setCellType(origem.getCellType());
+		switch (origem.getCellType()) {
 		case STRING:
 			destino.setCellValue(origem.getStringCellValue());
 			break;

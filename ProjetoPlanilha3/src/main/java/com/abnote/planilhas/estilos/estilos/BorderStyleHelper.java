@@ -2,8 +2,17 @@ package com.abnote.planilhas.estilos.estilos;
 
 import java.util.Map;
 
-import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.usermodel.BorderStyle;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+
 import com.abnote.planilhas.utils.PosicaoConverter;
+
+
 
 /**
  * Classe responsável por aplicar estilos de borda em células, intervalos ou
@@ -59,7 +68,7 @@ public class BorderStyleHelper {
 
 			for (int colIdx = indiceInicioColuna; colIdx <= indiceFimColuna; colIdx++) {
 				Cell cell = row.getCell(colIdx);
-				if (cell == null || cell.getCellTypeEnum() == CellType.BLANK) {
+				if (cell == null || cell.getCellType() == CellType.BLANK) {
 					continue; // Pular células vazias
 				}
 				aplicarBordasNaCelula(cell);
@@ -73,7 +82,7 @@ public class BorderStyleHelper {
 			if (row == null)
 				continue;
 			for (Cell cell : row) {
-				if (cell == null || cell.getCellTypeEnum() == CellType.BLANK) {
+				if (cell == null || cell.getCellType() == CellType.BLANK) {
 					continue; // Pular células vazias
 				}
 				aplicarBordasNaCelula(cell);
@@ -102,8 +111,8 @@ public class BorderStyleHelper {
 
 	// Método privado para verificar se o estilo atual possui bordas espessas
 	private boolean verificarBordaEspessa(CellStyle estilo) {
-		return estilo.getBorderTopEnum() == BorderStyle.THICK || estilo.getBorderBottomEnum() == BorderStyle.THICK
-				|| estilo.getBorderLeftEnum() == BorderStyle.THICK || estilo.getBorderRightEnum() == BorderStyle.THICK;
+		return estilo.getBorderTop() == BorderStyle.NONE && estilo.getBorderBottom() == BorderStyle.NONE &&
+				estilo.getBorderLeft() == BorderStyle.NONE && estilo.getBorderRight() == BorderStyle.NONE;
 	}
 
 	// Método privado para criar um novo estilo com bordas finas

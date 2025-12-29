@@ -5,29 +5,32 @@ import java.io.IOException;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import com.abnote.planilhas.estilos.EstiloCelula;
+import com.abnote.planilhas.exceptions.ArquivoException;
 import com.abnote.planilhas.utils.ManipuladorPlanilha;
 
-public interface IPlanilhaBasica {
+public interface IPlanilhaBasica extends AutoCloseable {
 
-	EstiloCelula aplicarEstilos();
+    EstiloCelula aplicarEstilos();
 
-	void criarPlanilha(String nomeSheet);
+    void criarPlanilha(String nomeSheet);
 
-	void criarSheet(String nomeSheet);
+    void criarSheet(String nomeSheet);
 
-	void SELECIONAR_SHEET(String nomeSheet);
+    void selecionarSheet(String nomeSheet);
 
-	void salvar(String nomeArquivo) throws IOException;
+    void salvar(String nomeArquivo);
+    void setDiretorioSaida(String diretorioSaida);
 
-	void setDiretorioSaida(String diretorioSaida);
+    String getDiretorioSaida();
 
-	String getDiretorioSaida();
+    Workbook obterWorkbook();
 
-	Workbook obterWorkbook();
+    IPlanilhaBasica emTodaAPlanilha();
 
-	IPlanilhaBasica emTodaAPlanilha();
+    IPlanilhaBasica ultimaLinha(String coluna);
 
-	IPlanilhaBasica ultimaLinha(String coluna);
-
-	ManipuladorPlanilha manipularPlanilha();
+    ManipuladorPlanilha manipularPlanilha();
+    IFormulas formula();
+    @Override
+    void close() throws Exception;
 }

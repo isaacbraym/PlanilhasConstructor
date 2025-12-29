@@ -28,7 +28,7 @@ public class Calculos {
 				continue;
 			}
 			Cell cell = row.getCell(coluna);
-			if (cell != null && cell.getCellTypeEnum() == CellType.NUMERIC) {
+			if (cell != null && cell.getCellType() == CellType.NUMERIC) {
 				soma += cell.getNumericCellValue();
 				if (estiloSoma == null) {
 					estiloSoma = cell.getCellStyle();
@@ -84,7 +84,7 @@ public class Calculos {
 				continue;
 			}
 			Cell cell = row.getCell(coluna);
-			if (cell != null && cell.getCellTypeEnum() == CellType.NUMERIC) {
+			if (cell != null && cell.getCellType() == CellType.NUMERIC) {
 				soma += cell.getNumericCellValue();
 				if (estiloSoma == null) {
 					estiloSoma = cell.getCellStyle();

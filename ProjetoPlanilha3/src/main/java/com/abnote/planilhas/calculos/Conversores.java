@@ -22,14 +22,13 @@ public class Conversores {
 				continue;
 			}
 			Cell cell = row.getCell(coluna);
-			if (cell != null && cell.getCellTypeEnum() == CellType.STRING) {
-				try {
-					double valorNumerico = Double.parseDouble(cell.getStringCellValue());
-					cell.setCellType(CellType.NUMERIC);
-					cell.setCellValue(valorNumerico);
-				} catch (NumberFormatException e) {
-					System.out.println("Célula em " + (i + 1) + " não é numérica e foi ignorada.");
-				}
+			if (cell != null && cell.getCellType() == CellType.STRING) {
+			    try {
+			        double valorNumerico = Double.parseDouble(cell.getStringCellValue());
+			        cell.setCellValue(valorNumerico);
+			    } catch (NumberFormatException e) {
+			        System.out.println("Célula em " + (i + 1) + " não é numérica e foi ignorada.");
+			    }
 			}
 		}
 	}
@@ -58,17 +57,16 @@ public class Conversores {
 			}
 			Cell cell = row.getCell(coluna);
 			if (cell != null) {
-				if (cell.getCellTypeEnum() == CellType.STRING) {
-					try {
-						double valorNumerico = Double.parseDouble(cell.getStringCellValue());
-						cell.setCellType(CellType.NUMERIC);
-						cell.setCellValue(valorNumerico);
-					} catch (NumberFormatException e) {
-						System.out.println("Célula em " + (i + 1) + " não é numérica e foi ignorada.");
-					}
+				if (cell.getCellType() == CellType.STRING) {
+				    try {
+				        double valorNumerico = Double.parseDouble(cell.getStringCellValue());
+				        cell.setCellValue(valorNumerico);
+				    } catch (NumberFormatException e) {
+				        System.out.println("Célula em " + (i + 1) + " não é numérica e foi ignorada.");
+				    }
 				}
-				if (cell.getCellTypeEnum() == CellType.NUMERIC) {
-					cell.setCellStyle(estiloContabil);
+				if (cell.getCellType() == CellType.NUMERIC) {
+				    cell.setCellStyle(estiloContabil);
 				}
 			}
 		}

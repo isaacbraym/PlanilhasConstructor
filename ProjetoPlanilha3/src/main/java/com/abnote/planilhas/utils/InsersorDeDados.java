@@ -10,70 +10,84 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.util.logging.Logger;
 
+import com.abnote.planilhas.exceptions.ArquivoException;
+import com.abnote.planilhas.exceptions.DadosInvalidosException;
+
 import org.apache.poi.ss.usermodel.*;
 
 public class InsersorDeDados {
 
-    private static final Logger logger = LoggerUtil.getLogger(InsersorDeDados.class);
-    
-    private final Sheet sheet;
-    private final PositionManager positionManager;
-    private int ultimoIndiceDeLinhaInserido = -1;
-    private int ultimoIndiceDeColunaInserido = -1;
+	private static final Logger logger = LoggerUtil.getLogger(InsersorDeDados.class);
 
-    public InsersorDeDados(Sheet sheet, PositionManager positionManager) {
-        this.sheet = sheet;
-        this.positionManager = positionManager;
-    }
+	private final Sheet sheet;
+	private final PositionManager positionManager;
+	private int ultimoIndiceDeLinhaInserido = -1;
+	private int ultimoIndiceDeColunaInserido = -1;
 
-    public void inserirDados(String valor) {
+	public InsersorDeDados(Sheet sheet, PositionManager positionManager) {
+		this.sheet = sheet;
+		this.positionManager = positionManager;
+	}
+
+	public void inserirDados(String valor) {
+		definirPosicaoPadraoSeNecessario();
+
+		Row linha = obterOuCriarLinha(positionManager.getPosicaoInicialLinha());
+		Cell celula = linha.createCell(positionManager.getPosicaoInicialColuna());
+
+		// Tenta converter para número, se falhar insere como string
+		definirValorCelula(celula, valor);
+
+		atualizarIndicesInseridos(positionManager.getPosicaoInicialLinha(), positionManager.getPosicaoInicialColuna());
+	}
+
+	public void inserirDados(Object dados, String delimitador) {
+		if (dados instanceof List) {
+			@SuppressWarnings("unchecked")
+			List<String> lista = (List<String>) dados;
+			inserirDados(lista);
+		} else if (dados instanceof String) {
+			String str = (String) dados;
+			if (Files.exists(Paths.get(str))) {
+				inserirDadosArquivo(str, delimitador);
+			} else {
+				List<String> lista = Arrays.asList(str.split(Pattern.quote(delimitador)));
+				inserirDados(lista);
+			}
+		} else if (dados instanceof File) {
+			inserirDadosArquivo(((File) dados).getPath(), delimitador);
+		} else {
+			throw new IllegalArgumentException("Tipo de dados não suportado: " + dados.getClass());
+		}
+	}
+
+	public void inserirDados(List<String> dados) {
+		definirPosicaoPadraoSeNecessario();
+
+		if (positionManager.isIntervaloDefinida()) {
+			inserirDadosEmIntervalo(dados);
+		} else {
+			inserirDadosEmLinha(dados);
+		}
+
+		positionManager.resetarPosicao();
+	}
+
+	public void inserirDados(List<String> dados, String delimitador) {
+		inserirDados(dados);
+	}
+
+	public void inserirDadosArquivo(String caminhoArquivo, String delimitador) {
         definirPosicaoPadraoSeNecessario();
-
-        Row linha = obterOuCriarLinha(positionManager.getPosicaoInicialLinha());
-        Cell celula = linha.createCell(positionManager.getPosicaoInicialColuna());
-        celula.setCellValue(valor);
-
-        atualizarIndicesInseridos(positionManager.getPosicaoInicialLinha(), positionManager.getPosicaoInicialColuna());
-    }
-
-    public void inserirDados(Object dados, String delimitador) {
-        if (dados instanceof List) {
-            @SuppressWarnings("unchecked")
-            List<String> lista = (List<String>) dados;
-            inserirDados(lista);
-        } else if (dados instanceof String) {
-            String str = (String) dados;
-            if (Files.exists(Paths.get(str))) {
-                inserirDadosArquivo(str, delimitador);
-            } else {
-                List<String> lista = Arrays.asList(str.split(Pattern.quote(delimitador)));
-                inserirDados(lista);
-            }
-        } else if (dados instanceof File) {
-            inserirDadosArquivo(((File) dados).getPath(), delimitador);
-        } else {
-            throw new IllegalArgumentException("Tipo de dados não suportado: " + dados.getClass());
+        
+        if (caminhoArquivo == null || caminhoArquivo.trim().isEmpty()) {
+            throw new ArquivoException(
+                "Caminho do arquivo não pode ser nulo ou vazio",
+                caminhoArquivo
+            );
         }
-    }
-
-    public void inserirDados(List<String> dados) {
-        definirPosicaoPadraoSeNecessario();
-
-        if (positionManager.isIntervaloDefinida()) {
-            inserirDadosEmIntervalo(dados);
-        } else {
-            inserirDadosEmLinha(dados);
-        }
-
-        positionManager.resetarPosicao();
-    }
-
-    public void inserirDados(List<String> dados, String delimitador) {
-        inserirDados(dados);
-    }
-
-    public void inserirDadosArquivo(String caminhoArquivo, String delimitador) {
-        definirPosicaoPadraoSeNecessario();
+        
+        // [REMOVED] Validação do delimitador removida (pode ser vazio em casos válidos)
 
         try (BufferedReader br = new BufferedReader(new FileReader(caminhoArquivo))) {
             String linhaTexto;
@@ -94,90 +108,120 @@ public class InsersorDeDados {
 
         } catch (IOException e) {
             logger.severe("Erro ao ler o arquivo: " + e.getMessage());
+            throw new ArquivoException(
+                "Erro ao ler arquivo. Verifique se o arquivo existe e está acessível",
+                caminhoArquivo,
+                e
+            );
         }
 
         positionManager.resetarPosicao();
     }
 
-    // Métodos auxiliares privados
+	/**
+	 * Define o valor da célula, tentando converter para número quando possível.
+	 * 
+	 * @param celula Célula a receber o valor
+	 * @param valor  String com o valor a ser inserido
+	 */
+	private void definirValorCelula(Cell celula, String valor) {
+		if (valor == null || valor.trim().isEmpty()) {
+			celula.setCellValue("");
+			return;
+		}
 
-    private void definirPosicaoPadraoSeNecessario() {
-        if (!positionManager.isPosicaoDefinida() && !positionManager.isIntervaloDefinida()) {
-            positionManager.setPosicaoInicialColuna(0);
-            positionManager.setPosicaoInicialLinha(0);
-        }
-    }
+		String valorTrimmed = valor.trim();
 
-    private Row obterOuCriarLinha(int indiceLinha) {
-        Row linha = sheet.getRow(indiceLinha);
-        if (linha == null) {
-            linha = sheet.createRow(indiceLinha);
-        }
-        return linha;
-    }
+		// Tenta converter para número
+		try {
+			double numeroDouble = Double.parseDouble(valorTrimmed);
+			celula.setCellValue(numeroDouble);
+		} catch (NumberFormatException e) {
+			// Não é número, insere como string
+			celula.setCellValue(valorTrimmed);
+		}
+	}
 
-    private void inserirDadosEmLinha(List<String> dados) {
-        Row linha = obterOuCriarLinha(positionManager.getPosicaoInicialLinha());
+	// Métodos auxiliares privados
 
-        for (int i = 0; i < dados.size(); i++) {
-            Cell celula = linha.createCell(positionManager.getPosicaoInicialColuna() + i);
-            celula.setCellValue(dados.get(i));
-            ultimoIndiceDeColunaInserido = positionManager.getPosicaoInicialColuna() + i;
-        }
+	private void definirPosicaoPadraoSeNecessario() {
+		if (!positionManager.isPosicaoDefinida() && !positionManager.isIntervaloDefinida()) {
+			positionManager.setPosicaoInicialColuna(0);
+			positionManager.setPosicaoInicialLinha(0);
+		}
+	}
 
-        atualizarIndicesInseridos(positionManager.getPosicaoInicialLinha(), ultimoIndiceDeColunaInserido);
-        positionManager.setPosicaoInicialLinha(positionManager.getPosicaoInicialLinha() + 1);
-    }
+	private Row obterOuCriarLinha(int indiceLinha) {
+		Row linha = sheet.getRow(indiceLinha);
+		if (linha == null) {
+			linha = sheet.createRow(indiceLinha);
+		}
+		return linha;
+	}
 
-    private void inserirDadosEmIntervalo(List<String> dados) {
-        int linhaAtual = positionManager.getPosicaoInicialLinha();
+	private void inserirDadosEmLinha(List<String> dados) {
+		Row linha = obterOuCriarLinha(positionManager.getPosicaoInicialLinha());
 
-        for (String dado : dados) {
-            if (linhaAtual > positionManager.getPosicaoFinalLinha()) {
-                break;
-            }
+		for (int i = 0; i < dados.size(); i++) {
+			Cell celula = linha.createCell(positionManager.getPosicaoInicialColuna() + i);
+			definirValorCelula(celula, dados.get(i)); // ✅ MUDANÇA AQUI
+			ultimoIndiceDeColunaInserido = positionManager.getPosicaoInicialColuna() + i;
+		}
 
-            Row linha = obterOuCriarLinha(linhaAtual);
+		atualizarIndicesInseridos(positionManager.getPosicaoInicialLinha(), ultimoIndiceDeColunaInserido);
+		positionManager.setPosicaoInicialLinha(positionManager.getPosicaoInicialLinha() + 1);
+	}
 
-            for (int coluna = positionManager.getPosicaoInicialColuna(); coluna <= positionManager.getPosicaoFinalColuna(); coluna++) {
-                Cell celula = linha.createCell(coluna);
-                celula.setCellValue(dado);
-            }
+	private void inserirDadosEmIntervalo(List<String> dados) {
+		int linhaAtual = positionManager.getPosicaoInicialLinha();
 
-            linhaAtual++;
-        }
+		for (String dado : dados) {
+			if (linhaAtual > positionManager.getPosicaoFinalLinha()) {
+				break;
+			}
 
-        atualizarIndicesInseridos(linhaAtual - 1, positionManager.getPosicaoFinalColuna());
-    }
+			Row linha = obterOuCriarLinha(linhaAtual);
 
-    private void inserirValoresEmLinha(int indiceLinha, String[] valores) {
-        Row linha = obterOuCriarLinha(indiceLinha);
+			for (int coluna = positionManager.getPosicaoInicialColuna(); coluna <= positionManager
+					.getPosicaoFinalColuna(); coluna++) {
+				Cell celula = linha.createCell(coluna);
+				definirValorCelula(celula, dado); // ✅ MUDANÇA AQUI
+			}
 
-        for (int i = 0; i < valores.length; i++) {
-            int colunaAtual = positionManager.getPosicaoInicialColuna() + i;
+			linhaAtual++;
+		}
 
-            if (positionManager.isIntervaloDefinida() && colunaAtual > positionManager.getPosicaoFinalColuna()) {
-                break;
-            }
+		atualizarIndicesInseridos(linhaAtual - 1, positionManager.getPosicaoFinalColuna());
+	}
 
-            Cell celula = linha.createCell(colunaAtual);
-            celula.setCellValue(valores[i].trim());
-            ultimoIndiceDeColunaInserido = colunaAtual;
-        }
-    }
+	private void inserirValoresEmLinha(int indiceLinha, String[] valores) {
+		Row linha = obterOuCriarLinha(indiceLinha);
 
-    private void atualizarIndicesInseridos(int linha, int coluna) {
-        ultimoIndiceDeLinhaInserido = linha;
-        ultimoIndiceDeColunaInserido = coluna;
-    }
+		for (int i = 0; i < valores.length; i++) {
+			int colunaAtual = positionManager.getPosicaoInicialColuna() + i;
 
-    // Getters para obter os últimos índices inseridos
+			if (positionManager.isIntervaloDefinida() && colunaAtual > positionManager.getPosicaoFinalColuna()) {
+				break;
+			}
 
-    public int getUltimoIndiceDeLinhaInserido() {
-        return ultimoIndiceDeLinhaInserido;
-    }
+			Cell celula = linha.createCell(colunaAtual);
+			definirValorCelula(celula, valores[i].trim()); // ✅ MUDANÇA AQUI
+			ultimoIndiceDeColunaInserido = colunaAtual;
+		}
+	}
 
-    public int getUltimoIndiceDeColunaInserido() {
-        return ultimoIndiceDeColunaInserido;
-    }
+	private void atualizarIndicesInseridos(int linha, int coluna) {
+		ultimoIndiceDeLinhaInserido = linha;
+		ultimoIndiceDeColunaInserido = coluna;
+	}
+
+	// Getters para obter os últimos índices inseridos
+
+	public int getUltimoIndiceDeLinhaInserido() {
+		return ultimoIndiceDeLinhaInserido;
+	}
+
+	public int getUltimoIndiceDeColunaInserido() {
+		return ultimoIndiceDeColunaInserido;
+	}
 }
